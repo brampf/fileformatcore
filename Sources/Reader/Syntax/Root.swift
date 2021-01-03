@@ -27,36 +27,27 @@ import Foundation
 /// Root Node in the Abstract Syntax Tree
 public protocol Root : Node {
     
+    static func configure(_ context: Self.Context, from config: Self.Conf?)
+
+    
 }
 
 extension Root {
     
     /// Read from URL
-    public static func read<Config: ParserConfig>(contentsOf url: URL, options: Data.ReadingOptions, _ config: Config? = nil, output: ((Output) -> Void)?) throws -> Self? {
+    public static func read(contentsOf url: URL, options: Data.ReadingOptions, _ config: Self.Conf? = nil, output: ((Output) -> Void)?) throws -> Self? {
         
         let data = try Data(contentsOf: url, options: options)
         
-        if let conf = config {
-            return try self.read(data, config: conf, output: output)
-        } else {
-            return try self.read(data, output: output)
-        }
+        return try self.read(data, config: config, output: output)
+
     }
     
     /// Read from Data
-    public static func read<Config: ParserConfig>(_ data: Data, config: Config?, output: ((Output) -> Void)?) throws -> Self? {
+    public static func read(_ data: Data, config: Self.Conf?, output: ((Output) -> Void)?) throws -> Self? {
         
-        var context = ParserContext<Config>(dataSize: data.count, config: config, out: output)
-        
-        return data.withUnsafeBytes { ptr in
-            self.init(ptr, context: &context)
-        }
-    }
-    
-    /// Read from Data
-    public static func read(_ data: Data, output: ((Output) -> Void)?) throws -> Self? {
-        
-        var context = ParserContext(dataSize: data.count, out: output)
+        var context = Self.Context.init(dataSize: data.count, out: output)
+        configure(context, from: config)
         
         return data.withUnsafeBytes { ptr in
             self.init(ptr, context: &context)

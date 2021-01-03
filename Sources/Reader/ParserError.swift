@@ -24,38 +24,13 @@
 
 import Foundation
 
-public protocol ParserConfig {
+enum ParserError : Swift.Error {
     
-}
+    case missalignedData
 
-struct Empty: ParserConfig {
-}
-
-
-open class ParserContext<Config: ParserConfig> {
+    case invalidMemoryAddress
     
-    /// current postion in the raw data
-    final var offset : Int = 0
+    case wrongDataType
     
-    /// absolute number of bytes in file
-    final let bytes : Int
-    
-    final let config : Config?
-    
-    final var notify: ((Output) -> Void)? = nil
-    
-    init(dataSize: Int, config: Config?, out: ((Output) -> Void)? = nil){
-        self.bytes = dataSize
-        self.config = config
-        self.notify = out
-    }
-
-}
-
-extension ParserContext where Config == Empty {
-    
-    convenience init(dataSize: Int, out: ((Output) -> Void)? = nil){
-        self.init(dataSize: dataSize, config: nil, out: out)
-    }
-    
+    case incompatibleDataFormat
 }

@@ -21,40 +21,30 @@
  SOFTWARE.
  
  */
+
 import Foundation
 
-open class Output : CustomStringConvertible {
+public typealias FixedChar8 = UInt8
+public typealias FixedChar16 = UInt16
+public typealias FixedChar32 = UInt32
+public typealias FixedChar64 = UInt64
+
+extension FixedWidthInteger {
     
-    var msg : String
-    var offsetStart : Int?
-    var offsetEnd: Int?
-    var node : AnyClass?
-    
-    public required init(_ msg: String, _ at: Int? = nil, _ until: Int? = nil, node: AnyClass? = nil){
-        self.msg = msg
-        self.offsetStart = at
-        self.offsetEnd = until
-        self.node = node
-    }
-    
-    public var description: String {
+    public init?(_ from: String, encoding: String.Encoding = .utf8){
         
-        return
-            "\(self.node != nil ? "[\(self.node!)] " : "")" + // node
-            "[\(type(of: self))] " + // message type
-            "\(offsetStart?.description ?? "")\(offsetEnd != nil ? "...\(offsetEnd?.description ?? " ") " : "\(self.offsetStart != nil ? "" : "")") " + // postion
-            msg
+        if let v = from.data(using: encoding)?.withUnsafeBytes({ ptr in
+            ptr.load(as: Self.self)
+        }){
+            self.init(v)
+        } else {
+            return nil
+        }
     }
-}
-
-final class Error : Output {
     
-}
-
-final class Warning : Output {
-    
-}
-
-final class Info : Output {
-    
+    func string(_ encoding: String.Encoding = .utf8) -> String? {
+        var me = self
+        let data = Data(bytes: &me, count: MemoryLayout<Self>.size)
+        return String(data: data, encoding: encoding)
+    }
 }

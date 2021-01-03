@@ -21,10 +21,13 @@
  SOFTWARE.
  
  */
+
 import Foundation
 
 /// A node in the abstract syntax tree
 public protocol Node {
-
-    init?<Config: ParserConfig>(_ data: UnsafeRawBufferPointer, context: inout ParserContext<Config>)
+    associatedtype Conf : Reader.Configuration
+    associatedtype Context : Reader.Context
+    
+    init?(_ data: UnsafeRawBufferPointer, context: inout Self.Context)
 }
