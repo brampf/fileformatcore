@@ -1,5 +1,5 @@
 import XCTest
-@testable import Reader
+@testable import FileReader
 
 final class ReaderTests: XCTestCase {
 

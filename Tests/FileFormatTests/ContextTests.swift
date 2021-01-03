@@ -1,21 +1,23 @@
 import XCTest
-import Reader
-
+import FileReader
+/*
 final class ContextTests: XCTestCase {
 
-    class MyConfig : Reader.Configuration {
+    final class MyConfig : FileReader.Configuration {
+        
+        public static var `default`: ContextTests.MyConfig = .init()
         
         var toggle : Bool = false
     }
     
-    class MyContext : Reader.Context {
+    class MyContext : FileReader.Context<MyConfig> {
         
         var randomProperty : String = "Hello World"
         
         var config : MyConfig? = nil
     }
     
-    class MyNode : Reader.Node {
+    class MyNode : FileReader.Node {
         typealias Conf = MyConfig
         typealias Context = MyContext
         
@@ -24,7 +26,7 @@ final class ContextTests: XCTestCase {
         }
     }
     
-    class MyRoot : MyNode, Reader.Root{
+    class MyRoot : MyNode, FileReader.Root{
         
         static func configure(_ context: ContextTests.MyContext, from config: ContextTests.MyConfig?) {
             context.config = config
@@ -40,3 +42,4 @@ final class ContextTests: XCTestCase {
     }
     
 }
+*/

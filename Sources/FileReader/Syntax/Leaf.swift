@@ -24,10 +24,8 @@
 
 import Foundation
 
-/// A node in the abstract syntax tree
-public protocol Node {
-    associatedtype Conf : Reader.Configuration
-    associatedtype Context : Reader.Context
+public protocol Leaf {
+    associatedtype Parameter : Any
     
-    init?(_ data: UnsafeRawBufferPointer, context: inout Self.Context)
+    init?(_ data: Slice<UnsafeRawBufferPointer>, with parameter: Parameter?) throws 
 }

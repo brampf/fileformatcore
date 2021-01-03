@@ -24,13 +24,17 @@
 
 import Foundation
 
-enum ParserError : Swift.Error {
+public protocol FileConfiguration {
     
-    case missalignedData
-
-    case invalidMemoryAddress
+    static var `default` : Self { get }
     
-    case wrongDataType
+}
+public protocol ReaderContext {
+    associatedtype Configuration: FileConfiguration
     
-    case incompatibleDataFormat
+    var offset : Int {get}
+    
+    var notify: ((Output) -> Void)? {get}
+    
+    init(using configuration: Configuration, out: ((Output) -> Void)?)
 }

@@ -24,33 +24,18 @@
 
 import Foundation
 
-/// Root Node in the Abstract Syntax Tree
-public protocol Root : Node {
+/// A node in the abstract syntax tree
+public protocol Node {
+    associatedtype Configuration: FileReader.FileConfiguration
+    associatedtype Context : FileReader.ReaderContext
     
-    static func configure(_ context: Self.Context, from config: Self.Conf?)
-
-    
+    init?(_ data: UnsafeRawBufferPointer, context: inout Self.Context) throws 
 }
 
-extension Root {
+/// An abstract node in the syntax tree
+public protocol AbstractNode {
+    associatedtype Configuration: FileReader.FileConfiguration
+    associatedtype Context : FileReader.ReaderContext
     
-    /// Read from URL
-    public static func read(contentsOf url: URL, options: Data.ReadingOptions, _ config: Self.Conf? = nil, output: ((Output) -> Void)?) throws -> Self? {
-        
-        let data = try Data(contentsOf: url, options: options)
-        
-        return try self.read(data, config: config, output: output)
-
-    }
-    
-    /// Read from Data
-    public static func read(_ data: Data, config: Self.Conf?, output: ((Output) -> Void)?) throws -> Self? {
-        
-        var context = Self.Context.init(dataSize: data.count, out: output)
-        configure(context, from: config)
-        
-        return data.withUnsafeBytes { ptr in
-            self.init(ptr, context: &context)
-        }
-    }
+    static func read(_ data: UnsafeRawBufferPointer, context: inout Self.Context) throws -> Self?
 }

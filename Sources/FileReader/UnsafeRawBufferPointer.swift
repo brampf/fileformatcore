@@ -31,12 +31,12 @@ extension UnsafeRawBufferPointer {
         
         // make sure that the offset is within the allowed bounds
         guard offset >= 0 && offset < self.count else {
-            throw ParserError.invalidMemoryAddress
+            throw ReaderError.invalidMemoryAddress
         }
         
         /// access the memory
         guard let val = self.baseAddress?.advanced(by: offset).assumingMemoryBound(to: I.self).pointee else {
-            throw ParserError.incompatibleDataFormat
+            throw ReaderError.incompatibleDataFormat
         }
         
         /// move the pointer
@@ -49,12 +49,12 @@ extension UnsafeRawBufferPointer {
         
         // make sure that the offset is within the allowed bounds
         guard offset >= 0 && offset < self.count else {
-            throw ParserError.invalidMemoryAddress
+            throw ReaderError.invalidMemoryAddress
         }
         
         /// access the memory
         guard let val = self.baseAddress?.advanced(by: offset).assumingMemoryBound(to: I.self).pointee else {
-            throw ParserError.incompatibleDataFormat
+            throw ReaderError.incompatibleDataFormat
         }
         
         /// move the pointer
@@ -72,11 +72,11 @@ extension UnsafeRawBufferPointer {
     
         // make sure that the offset is within the allowed bounds
         guard offset >= 0 && offset < self.count else {
-            throw ParserError.invalidMemoryAddress
+            throw ReaderError.invalidMemoryAddress
         }
         
         guard let chars = self.baseAddress?.advanced(by: offset).assumingMemoryBound(to: CChar.self) else {
-            throw ParserError.missalignedData
+            throw ReaderError.missalignedData
         }
         let string = String(cString: chars)
         
@@ -90,11 +90,11 @@ extension UnsafeRawBufferPointer {
         
         // make sure that the offset is within the allowed bounds
         guard offset >= 0 && offset < self.count else {
-            throw ParserError.invalidMemoryAddress
+            throw ReaderError.invalidMemoryAddress
         }
         
         guard let chars = self.baseAddress?.advanced(by: offset).assumingMemoryBound(to: UInt8.self), let string = String(data: Data(bytes: chars, count: len ?? self.count - offset), encoding: encoding) else {
-            throw ParserError.incompatibleDataFormat
+            throw ReaderError.incompatibleDataFormat
         }
         
         // move the pointer beyond the null but not beyond the bounds
@@ -111,15 +111,15 @@ extension UnsafeRawBufferPointer {
         
         // make sure that the offset is within the allowed bounds
         guard offset >= 0 && offset < self.count else {
-            throw ParserError.invalidMemoryAddress
+            throw ReaderError.invalidMemoryAddress
         }
         
         guard let raw = self.baseAddress?.advanced(by: offset).assumingMemoryBound(to: Raw.RawValue.self).pointee else {
-            throw ParserError.missalignedData
+            throw ReaderError.missalignedData
         }
         
         guard let value = Raw(rawValue: raw) else {
-            throw ParserError.incompatibleDataFormat
+            throw ReaderError.incompatibleDataFormat
         }
         
         // move the pointer beyond the null but not beyond the bounds
@@ -132,15 +132,15 @@ extension UnsafeRawBufferPointer {
         
         // make sure that the offset is within the allowed bounds
         guard offset >= 0 && offset < self.count else {
-            throw ParserError.invalidMemoryAddress
+            throw ReaderError.invalidMemoryAddress
         }
         
         guard let raw = self.baseAddress?.advanced(by: offset).assumingMemoryBound(to: Raw.RawValue.self).pointee else {
-            throw ParserError.missalignedData
+            throw ReaderError.missalignedData
         }
         
         guard let value = Raw(rawValue: byteSwapped ? raw.byteSwapped : raw) else {
-            throw ParserError.incompatibleDataFormat
+            throw ReaderError.incompatibleDataFormat
         }
         
         // move the pointer beyond the null but not beyond the bounds

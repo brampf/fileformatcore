@@ -24,27 +24,13 @@
 
 import Foundation
 
-public protocol Configuration {
+enum ReaderError : Swift.Error {
     
-}
+    case missalignedData
 
-open class Context {
+    case invalidMemoryAddress
     
-    /// current postion in the raw data
-    final var offset : Int = 0
+    case wrongDataType
     
-    /// absolute number of bytes in file
-    final let bytes : Int
-    
-    final var notify: ((Output) -> Void)? = nil
-    
-    public required init(dataSize: Int, out: ((Output) -> Void)? = nil){
-        self.bytes = dataSize
-        self.notify = out
-    }
-    
-    public var hasBytes : Bool {
-        return offset < bytes
-    }
-
+    case incompatibleDataFormat
 }
