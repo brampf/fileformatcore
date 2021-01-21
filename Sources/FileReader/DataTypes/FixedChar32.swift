@@ -48,3 +48,13 @@ extension FixedWidthInteger {
         return String(data: data, encoding: encoding)
     }
 }
+
+extension Array where Element : FixedWidthInteger {
+    
+    public func string(_ encoding: String.Encoding = .utf8) -> String? {
+        var me = self
+        let data = Data(bytes: &me, count: self.count * MemoryLayout<Element>.size)
+        return String(data: data, encoding: encoding)
+    }
+    
+}
