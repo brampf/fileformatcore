@@ -24,13 +24,91 @@
 
 import Foundation
 
-enum ReaderError : Swift.Error {
+public enum ReaderError : LocalizedError, CustomStringConvertible {
     
-    case missalignedData
+    case missalignedData(_ stack: ErrorStack, _ size: Int)
 
-    case invalidMemoryAddress
+    case invalidMemoryAddress(_ stack: ErrorStack, _ upperBound: Int)
     
-    case wrongDataType
+    case wrongDataType(_ stack: ErrorStack)
     
-    case incompatibleDataFormat
+    case incompatibleDataFormat(_ stack: ErrorStack)
+    
+    public var errorDescription: String? {
+        
+        switch self {
+        case .missalignedData(let stack, let size):
+            return "\(stack) exceeds \(size)"
+            
+        case .invalidMemoryAddress(let stack, let upperBound):
+            return "\(stack) outside the bounds of [0...\(upperBound)]"
+            
+        case .wrongDataType(let stack):
+            return "\(stack) not readabel"
+        
+        case .incompatibleDataFormat(let stack):
+            return "\(stack) not readable"
+        }
+    }
+    
+    public var description: String {
+        
+        errorDescription ?? Mirror(reflecting: self).description
+    }
+    
+    public var stack : ErrorStack {
+        switch self {
+        case .missalignedData(let stack, _):
+            return stack
+            
+        case .invalidMemoryAddress(let stack, _):
+            return stack
+            
+        case .wrongDataType(let stack):
+            return stack
+            
+        case .incompatibleDataFormat(let stack):
+            return stack
+        }
+        
+    }
+}
+
+
+public struct ErrorStack : Swift.Error, CustomStringConvertible {
+
+    var name: String
+    var type : Any.Type
+    
+    var offset : Int
+    
+    var path :  String
+    var line : Int
+    
+    public init(_ symbol: String?, _ type: Any.Type, _ offset: Int, line : Int = #line, file: String = #filePath){
+        
+        self.name = symbol ?? "_"
+        self.type = type
+        self.offset = offset
+        
+        self.path = file
+        self.line = line-1
+    }
+    
+    public init<C: ReaderContext>(_ symbol: String?, _ any: Any, _ context: C,  line : Int = #line, file: String = #filePath) {
+        
+        self.name = symbol ?? "_"
+        self.type = Swift.type(of: any)
+        
+        self.offset = context.offset
+        
+        self.path = file
+        self.line = line-1
+    }
+    
+    public var description: String {
+        
+        "\(name) : \(type) at \(offset)"
+    }
+    
 }

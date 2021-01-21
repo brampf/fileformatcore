@@ -28,9 +28,9 @@ open class Output : CustomStringConvertible {
     var msg : String
     var offsetStart : Int?
     var offsetEnd: Int?
-    var node : AnyClass?
+    var node : Any.Type?
     
-    public required init(_ msg: String, _ at: Int? = nil, _ until: Int? = nil, node: AnyClass? = nil){
+    public required init(_ msg: String, _ at: Int? = nil, _ until: Int? = nil, node: Any.Type? = nil){
         self.msg = msg
         self.offsetStart = at
         self.offsetEnd = until

@@ -33,9 +33,8 @@ public protocol Node {
 }
 
 /// An abstract node in the syntax tree
-public protocol AbstractNode {
-    associatedtype Configuration: FileReader.FileConfiguration
-    associatedtype Context : FileReader.ReaderContext
+public protocol AbstractNode : Node {
+    associatedtype NodeType : AbstractNode
     
-    static func read(_ data: UnsafeRawBufferPointer, context: inout Self.Context) throws -> Self?
+    static func read(_ data: UnsafeRawBufferPointer, context: inout Self.Context) throws -> NodeType?
 }

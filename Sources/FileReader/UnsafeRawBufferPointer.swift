@@ -24,19 +24,37 @@
  */
 
 import Foundation
+import UInt4
 
 extension UnsafeRawBufferPointer {
     
-    public func read<I: FixedWidthInteger>(_ offset: inout Int, byteSwapped : Bool = false) throws -> I {
+    public func skip(_ bytes: Int, _ offset: inout Int, _ name : String? = "SKIP") {
+        
+        #if Xcode
+        debugOut(offset, "SKIP \(bytes)" , name ?? "")
+        #endif
+        
+        offset += bytes
+    }
+}
+
+extension UnsafeRawBufferPointer {
+        
+    /// Read `FixedWidthInteger`
+    public func read<I: FixedWidthInteger>(_ offset: inout Int, byteSwapped : Bool = false, _ name : String? = nil) throws -> I {
+        
+        #if Xcode
+        debugOut(offset, I.self, name)
+        #endif
         
         // make sure that the offset is within the allowed bounds
-        guard offset >= 0 && offset < self.count else {
-            throw ReaderError.invalidMemoryAddress
+        guard offset >= 0 && offset <= self.count - MemoryLayout<I>.size else {
+            throw ReaderError.invalidMemoryAddress(ErrorStack(name, I.self, offset), self.count - MemoryLayout<I>.size)
         }
         
         /// access the memory
         guard let val = self.baseAddress?.advanced(by: offset).assumingMemoryBound(to: I.self).pointee else {
-            throw ReaderError.incompatibleDataFormat
+            throw ReaderError.incompatibleDataFormat(ErrorStack(name, I.self, offset))
         }
         
         /// move the pointer
@@ -45,22 +63,27 @@ extension UnsafeRawBufferPointer {
         return byteSwapped ? val.byteSwapped : val
     }
     
-    public func read<I: FixedWidthInteger>(_ offset: inout Int, as: I.Type, byteSwapped : Bool = false) throws -> I {
+    /// Read `FixedWidthInteger` as another `FixedWidthInteger`
+    public func read<I: FixedWidthInteger, J: FixedWidthInteger>(_ offset: inout Int, as: I.Type, byteSwapped : Bool = false, _ name: String? = nil) throws -> J {
+        
+        #if Xcode
+        debugOut(offset, I.self, name)
+        #endif
         
         // make sure that the offset is within the allowed bounds
-        guard offset >= 0 && offset < self.count else {
-            throw ReaderError.invalidMemoryAddress
+        guard offset >= 0 && offset <= self.count - MemoryLayout<I>.size else {
+            throw ReaderError.invalidMemoryAddress(ErrorStack(name, I.self, offset), self.count - MemoryLayout<I>.size)
         }
         
         /// access the memory
         guard let val = self.baseAddress?.advanced(by: offset).assumingMemoryBound(to: I.self).pointee else {
-            throw ReaderError.incompatibleDataFormat
+            throw ReaderError.incompatibleDataFormat(ErrorStack(name, I.self, offset))
         }
         
         /// move the pointer
         offset += MemoryLayout<I>.size
         /// return the requested value
-        return byteSwapped ? val.byteSwapped : val
+        return J(byteSwapped ? val.byteSwapped : val)
     }
 
 }
@@ -68,17 +91,20 @@ extension UnsafeRawBufferPointer {
 // MARK:- String
 extension UnsafeRawBufferPointer {
     
-    public func read(_ offset: inout Int) throws -> String {
+    /// Read zero-terminated CString
+    public func read(_ offset: inout Int, upperBound: Int, _ name: String? = nil) throws -> String {
     
+        #if Xcode
+        debugOut(offset, String.self, name)
+        #endif
+        
         // make sure that the offset is within the allowed bounds
         guard offset >= 0 && offset < self.count else {
-            throw ReaderError.invalidMemoryAddress
+            throw ReaderError.invalidMemoryAddress(ErrorStack(name, String.self, offset), self.count)
         }
         
-        guard let chars = self.baseAddress?.advanced(by: offset).assumingMemoryBound(to: CChar.self) else {
-            throw ReaderError.missalignedData
-        }
-        let string = String(cString: chars)
+        let bounded = self.bindMemory(to: CChar.self)[offset..<upperBound]
+        let string = String(cString: Array(bounded))
         
         // move the pointer beyond the null but not beyond the bounds
         offset += Swift.min(string.count + 1, self.count)
@@ -86,20 +112,125 @@ extension UnsafeRawBufferPointer {
         
     }
     
-    public func read(_ offset: inout Int, len: Int? = nil, encoding: String.Encoding = .utf8) throws -> String {
+    /// Read String of known length or until end of buffer
+    public func read(_ offset: inout Int, len: Int? = nil, encoding: String.Encoding = .utf8, _ name: String? = nil) throws -> String? {
+        
+        let bytes = len ?? self.count - offset
+        
+        #if Xcode
+        debugOut(offset, "String \(bytes)", name)
+        #endif
         
         // make sure that the offset is within the allowed bounds
-        guard offset >= 0 && offset < self.count else {
-            throw ReaderError.invalidMemoryAddress
+        guard offset >= 0 && offset <= self.count - bytes else {
+            throw ReaderError.invalidMemoryAddress(ErrorStack(name, String.self, offset),self.count-bytes)
         }
         
-        guard let chars = self.baseAddress?.advanced(by: offset).assumingMemoryBound(to: UInt8.self), let string = String(data: Data(bytes: chars, count: len ?? self.count - offset), encoding: encoding) else {
-            throw ReaderError.incompatibleDataFormat
+        let data = Data(self[offset..<offset+bytes])
+        
+        // move the pointer beyond the null but not beyond the bounds
+        offset += bytes
+        return String(data: data, encoding: encoding)
+        
+    }
+}
+
+// MARK:- Array
+extension UnsafeRawBufferPointer {
+    
+    /// Read Array  of known length or until end of buffer
+    public func read<F: FixedWidthInteger>(_ offset: inout Int, len: Int, byteSwapped : Bool = false, _ name: String? = nil) throws -> [F] {
+   
+        #if Xcode
+        debugOut(offset, "\(F.self) [\(len)]", name)
+        #endif
+        
+        // make sure that the offset is within the allowed bounds
+        guard offset >= 0 && (offset + len * MemoryLayout<F>.size) < self.count else {
+            throw ReaderError.invalidMemoryAddress(ErrorStack(name, [F].self, offset), self.count)
+        }
+        
+        /// access the memory
+        guard var val = self.baseAddress?.advanced(by: offset).assumingMemoryBound(to: F.self) else {
+            throw ReaderError.incompatibleDataFormat(ErrorStack(name, [F].self, offset))
+        }
+        
+        var result = [F]()
+        for _ in 0..<len {
+            result.append(byteSwapped ? val.pointee.byteSwapped : val.pointee)
+            val = val.predecessor()
         }
         
         // move the pointer beyond the null but not beyond the bounds
-        offset += len ?? (count - offset)
-        return string
+        offset += result.count * MemoryLayout<F>.size
+        return result
+        
+    }
+    
+    /// Read Array  of known length or until end of buffer
+    public func read<F: FixedWidthInteger>(_ offset: inout Int, upperBound: Int, byteSwapped : Bool = false, _ name: String? = nil) throws -> [F] {
+        
+        guard (upperBound-offset) % MemoryLayout<F>.size == 0 else {
+            print("\(upperBound-offset) incompatible length for Array of \(F.self)")
+            throw ReaderError.missalignedData(ErrorStack(name, [F].self, offset), upperBound-offset)
+        }
+        
+        let len = (upperBound-offset) / MemoryLayout<F>.size
+
+        #if Xcode
+        debugOut(offset, "\([F].self) [\(len)]", name)
+        #endif
+        
+        // make sure that the offset is within the allowed bounds
+        guard offset >= 0 && offset < upperBound else {
+            print("Reading \(F.self)[\(len)] at \(offset) outside the bounds of [0...\(self.count-1)]")
+            throw ReaderError.invalidMemoryAddress(ErrorStack(name, [F].self, offset), upperBound)
+        }
+        
+        /// access the memory
+        guard var val = self.baseAddress?.advanced(by: offset).assumingMemoryBound(to: F.self) else {
+            print("NOGO \(F.self)")
+            throw ReaderError.incompatibleDataFormat(ErrorStack(name, [F].self, offset))
+        }
+        
+        var result = [F]()
+        for _ in 0..<len {
+            result.append(byteSwapped ? val.pointee.byteSwapped : val.pointee)
+            val = val.predecessor()
+        }
+        
+        // move the pointer beyond the null but not beyond the bounds
+        offset += result.count * MemoryLayout<F>.size
+        return result
+        
+    }
+}
+
+// MARK:- Data
+extension UnsafeRawBufferPointer {
+    
+    /// Read Data  of known length or until end of buffer
+    public func read(_ offset: inout Int, upperBound: Int, byteSwapped : Bool = false, _ name: String? = nil) throws -> Data? {
+        
+        #if Xcode
+        debugOut(offset, "\(Data.self) [\(upperBound-offset)]", name)
+        #endif
+        
+        if offset == upperBound {
+            return nil
+        }
+        
+        // make sure that the offset is within the allowed bounds
+        guard offset >= 0 && offset < upperBound else {
+            throw ReaderError.invalidMemoryAddress(ErrorStack(name, Data.self, offset), upperBound)
+        }
+        
+        /// access the memory
+        let result = Data(self[offset..<upperBound])
+        
+        // move the pointer beyond the null but not beyond the bounds
+        offset += result.count
+        return result
         
     }
 }
@@ -107,19 +238,25 @@ extension UnsafeRawBufferPointer {
 //MARK:- Enum / RawRepresentable
 extension UnsafeRawBufferPointer {
     
-    public func read<Raw: RawRepresentable>(_ offset: inout Int) throws -> Raw? {
+    /// Read `RawRepresentable`
+    public func read<Raw: RawRepresentable>(_ offset: inout Int, _ name: String? = nil) throws -> Raw? {
+        
+        #if Xcode
+        debugOut(offset, Raw.self, name)
+        #endif
         
         // make sure that the offset is within the allowed bounds
-        guard offset >= 0 && offset < self.count else {
-            throw ReaderError.invalidMemoryAddress
+        guard offset >= 0 && offset <= self.count - MemoryLayout<Raw.RawValue>.size else {
+            print("Reading \(MemoryLayout<Raw.RawValue>.size) byte at \(offset) outside the bounds of [0...\(self.count-1)]")
+            throw ReaderError.invalidMemoryAddress(ErrorStack(name, Raw.RawValue.self, offset), self.count - MemoryLayout<Raw.RawValue>.size)
         }
         
         guard let raw = self.baseAddress?.advanced(by: offset).assumingMemoryBound(to: Raw.RawValue.self).pointee else {
-            throw ReaderError.missalignedData
+            throw ReaderError.incompatibleDataFormat(ErrorStack(name, Raw.RawValue.self, offset))
         }
         
         guard let value = Raw(rawValue: raw) else {
-            throw ReaderError.incompatibleDataFormat
+            throw ReaderError.wrongDataType(ErrorStack(name, Raw.RawValue.self, offset))
         }
         
         // move the pointer beyond the null but not beyond the bounds
@@ -128,19 +265,25 @@ extension UnsafeRawBufferPointer {
         
     }
     
-    public func read<Raw: RawRepresentable>(_ offset: inout Int, _ byteSwapped : Bool = false) throws -> Raw? where Raw.RawValue : FixedWidthInteger {
+    /// Read `RawRepresentable`
+    public func read<Raw: RawRepresentable>(_ offset: inout Int, _ byteSwapped : Bool = false, _ name : String? = nil) throws -> Raw? where Raw.RawValue : FixedWidthInteger {
+        
+        #if Xcode
+        debugOut(offset, Raw.self, name)
+        #endif
         
         // make sure that the offset is within the allowed bounds
-        guard offset >= 0 && offset < self.count else {
-            throw ReaderError.invalidMemoryAddress
+        guard offset >= 0 && offset <= self.count - MemoryLayout<Raw.RawValue>.size else {
+            print("Reading \(MemoryLayout<Raw.RawValue>.size) byte at \(offset) outside the bounds of [0...\(self.count-1)]")
+            throw ReaderError.invalidMemoryAddress(ErrorStack(name, Raw.self, offset), self.count - MemoryLayout<Raw.RawValue>.size)
         }
         
         guard let raw = self.baseAddress?.advanced(by: offset).assumingMemoryBound(to: Raw.RawValue.self).pointee else {
-            throw ReaderError.missalignedData
+            throw ReaderError.incompatibleDataFormat(ErrorStack(name, Raw.self, offset))
         }
         
         guard let value = Raw(rawValue: byteSwapped ? raw.byteSwapped : raw) else {
-            throw ReaderError.incompatibleDataFormat
+            throw ReaderError.wrongDataType(ErrorStack(name, Raw.self, offset))
         }
         
         // move the pointer beyond the null but not beyond the bounds
@@ -150,3 +293,46 @@ extension UnsafeRawBufferPointer {
     }
 }
 
+// MARK:- UInt4
+extension UnsafeRawBufferPointer {
+    
+    /// Read Tuple of `UInt4`
+    public func read(_ offset: inout Int, _ name : String? = nil) throws -> (UInt4, UInt4) {
+        
+        #if Xcode
+        debugOut(offset, (UInt4,UInt4).self, name)
+        #endif
+        
+        // make sure that the offset is within the allowed bounds
+        guard offset >= 0 && offset <= self.count - MemoryLayout<UInt8>.size else {
+            print("Reading 1 byte at \(offset) outside the bounds of [0...\(self.count-1) ]")
+            throw ReaderError.invalidMemoryAddress(ErrorStack(name, UInt8.self, offset), self.count - MemoryLayout<UInt8>.size)
+        }
+        
+        /// access the memory
+        guard let val = self.baseAddress?.advanced(by: offset).assumingMemoryBound(to: UInt8.self).pointee else {
+            throw ReaderError.incompatibleDataFormat(ErrorStack(name, UInt8.self, offset))
+        }
+        
+        /// move the pointer
+        offset += MemoryLayout<UInt8>.size
+        /// return the requested value
+        return (UInt4(val >> 4 & 0b00001111) , UInt4(val & 0b00001111))
+    
+    }
+    
+}
+
+#if Xcode
+extension UnsafeRawBufferPointer {
+    
+    func debugOut(_ offset: Int, _ type: Any.Type, _ symbol: String? = nil) {
+        debugOut(offset, String(describing: type), symbol)
+    }
+    
+    func debugOut(_ offset: Int, _ type: String, _ symbol: String? = nil) {
+        print("\(String(offset).padding(toLength: 16, withPad: " ", startingAt: 0)) \(type.padding(toLength: 32, withPad: " ", startingAt: 0)) \(symbol ?? "")")
+    }
+    
+}
+#endif

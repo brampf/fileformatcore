@@ -24,6 +24,8 @@ let package = Package(
             dependencies: ["UInt4"]),
         .testTarget(
             name: "FileFormatTests",
-            dependencies: ["FileReader"]),
+            dependencies: ["FileReader"],
+            swiftSettings: [.define("PARSER_TRACE", .when(configuration: .debug))]
+            )
     ]
 )
