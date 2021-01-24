@@ -30,7 +30,7 @@ extension UnsafeRawBufferPointer {
     
     public func skip(_ bytes: Int, _ offset: inout Int, _ name : String? = "SKIP") {
         
-        #if Xcode
+        #if PARSER_TRACE
         debugOut(offset, "SKIP \(bytes)" , name ?? "")
         #endif
         
@@ -43,7 +43,7 @@ extension UnsafeRawBufferPointer {
     /// Read `FixedWidthInteger`
     public func read<I: FixedWidthInteger>(_ offset: inout Int, byteSwapped : Bool = false, _ name : String? = nil) throws -> I {
         
-        #if Xcode
+        #if PARSER_TRACE
         debugOut(offset, I.self, name)
         #endif
         
@@ -66,7 +66,7 @@ extension UnsafeRawBufferPointer {
     /// Read `FixedWidthInteger` as another `FixedWidthInteger`
     public func read<I: FixedWidthInteger, J: FixedWidthInteger>(_ offset: inout Int, as: I.Type, byteSwapped : Bool = false, _ name: String? = nil) throws -> J {
         
-        #if Xcode
+        #if PARSER_TRACE
         debugOut(offset, I.self, name)
         #endif
         
@@ -94,7 +94,7 @@ extension UnsafeRawBufferPointer {
     /// Read zero-terminated CString
     public func read(_ offset: inout Int, upperBound: Int, _ name: String? = nil) throws -> String {
     
-        #if Xcode
+        #if PARSER_TRACE
         debugOut(offset, String.self, name)
         #endif
         
@@ -117,7 +117,7 @@ extension UnsafeRawBufferPointer {
         
         let bytes = len ?? self.count - offset
         
-        #if Xcode
+        #if PARSER_TRACE
         debugOut(offset, "String \(bytes)", name)
         #endif
         
@@ -141,12 +141,12 @@ extension UnsafeRawBufferPointer {
     /// Read Array  of known length or until end of buffer
     public func read<F: FixedWidthInteger>(_ offset: inout Int, len: Int, byteSwapped : Bool = false, _ name: String? = nil) throws -> [F] {
    
-        #if Xcode
+        #if PARSER_TRACE
         debugOut(offset, "\(F.self) [\(len)]", name)
         #endif
         
         // make sure that the offset is within the allowed bounds
-        guard offset >= 0 && (offset + len * MemoryLayout<F>.size) < self.count else {
+        guard offset >= 0 && (offset + len * MemoryLayout<F>.size) <= self.count else {
             throw ReaderError.invalidMemoryAddress(ErrorStack(name, [F].self, offset), self.count)
         }
         
@@ -177,12 +177,12 @@ extension UnsafeRawBufferPointer {
         
         let len = (upperBound-offset) / MemoryLayout<F>.size
 
-        #if Xcode
+        #if PARSER_TRACE
         debugOut(offset, "\([F].self) [\(len)]", name)
         #endif
         
         // make sure that the offset is within the allowed bounds
-        guard offset >= 0 && offset < upperBound else {
+        guard offset >= 0 && offset <= upperBound else {
             print("Reading \(F.self)[\(len)] at \(offset) outside the bounds of [0...\(self.count-1)]")
             throw ReaderError.invalidMemoryAddress(ErrorStack(name, [F].self, offset), upperBound)
         }
@@ -212,7 +212,7 @@ extension UnsafeRawBufferPointer {
     /// Read Data  of known length or until end of buffer
     public func read(_ offset: inout Int, upperBound: Int, byteSwapped : Bool = false, _ name: String? = nil) throws -> Data? {
         
-        #if Xcode
+        #if PARSER_TRACE
         debugOut(offset, "\(Data.self) [\(upperBound-offset)]", name)
         #endif
         
@@ -241,7 +241,7 @@ extension UnsafeRawBufferPointer {
     /// Read `RawRepresentable`
     public func read<Raw: RawRepresentable>(_ offset: inout Int, _ name: String? = nil) throws -> Raw? {
         
-        #if Xcode
+        #if PARSER_TRACE
         debugOut(offset, Raw.self, name)
         #endif
         
@@ -268,7 +268,7 @@ extension UnsafeRawBufferPointer {
     /// Read `RawRepresentable`
     public func read<Raw: RawRepresentable>(_ offset: inout Int, _ byteSwapped : Bool = false, _ name : String? = nil) throws -> Raw? where Raw.RawValue : FixedWidthInteger {
         
-        #if Xcode
+        #if PARSER_TRACE
         debugOut(offset, Raw.self, name)
         #endif
         
@@ -299,7 +299,7 @@ extension UnsafeRawBufferPointer {
     /// Read Tuple of `UInt4`
     public func read(_ offset: inout Int, _ name : String? = nil) throws -> (UInt4, UInt4) {
         
-        #if Xcode
+        #if PARSER_TRACE
         debugOut(offset, (UInt4,UInt4).self, name)
         #endif
         
@@ -323,15 +323,19 @@ extension UnsafeRawBufferPointer {
     
 }
 
-#if Xcode
+#if PARSER_TRACE
 extension UnsafeRawBufferPointer {
     
-    func debugOut(_ offset: Int, _ type: Any.Type, _ symbol: String? = nil) {
-        debugOut(offset, String(describing: type), symbol)
+    func debugOut(_ offset: Int, _ type: Any.Type, _ debugSymbol: String? = nil) {
+        debugOut(offset, String(describing: type), debugSymbol)
     }
     
-    func debugOut(_ offset: Int, _ type: String, _ symbol: String? = nil) {
-        print("\(String(offset).padding(toLength: 16, withPad: " ", startingAt: 0)) \(type.padding(toLength: 32, withPad: " ", startingAt: 0)) \(symbol ?? "")")
+    func debugOut(_ offset: Int, _ type: String, _ debugSymbol: String? = nil) {
+        let offset = String(offset).padding(toLength: 13, withPad: " ", startingAt: 0)
+        let symbol = "\(debugSymbol ?? "")".padding(toLength: 12, withPad: " ", startingAt: 0)
+        let type = "\(type)".padding(toLength: 12, withPad: " ", startingAt: 0)
+        
+        print("[\(offset)] \(symbol) : \(type)")
     }
     
 }

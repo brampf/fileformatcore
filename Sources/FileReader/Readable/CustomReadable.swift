@@ -1,6 +1,6 @@
 /*
  
- Copyright (c) <2020>
+ Copyright (c) <2021>
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -24,17 +24,8 @@
 
 import Foundation
 
-/// A node in the abstract syntax tree
-public protocol Node {
-    associatedtype Configuration: FileReader.FileConfiguration
-    associatedtype Context : FileReader.ReaderContext
-    
-    init?(_ data: UnsafeRawBufferPointer, context: inout Self.Context) throws 
-}
+public protocol CustomReadable : AnyReadable {
 
-/// An abstract node in the syntax tree
-public protocol AbstractNode : Node {
-    associatedtype NodeType : AbstractNode
+    mutating func readManually(_ data: UnsafeRawBufferPointer, context: inout Context) throws
     
-    static func read(_ data: UnsafeRawBufferPointer, context: inout Self.Context) throws -> NodeType?
 }

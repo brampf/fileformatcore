@@ -1,8 +1,9 @@
 import XCTest
-import FileReader
+import DataTypes
 
 final class UInt0Tests: XCTestCase {
 
+    /*
     func testInit() {
         
         let z1 = UInt0(0)
@@ -50,6 +51,6 @@ final class UInt0Tests: XCTestCase {
         
         XCTAssertEqual(zero,0)
     }
-    
+    */
 }
 

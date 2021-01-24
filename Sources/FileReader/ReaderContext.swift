@@ -24,17 +24,103 @@
 
 import Foundation
 
-public protocol FileConfiguration {
+public protocol Context {
     
-    static var `default` : Self { get }
+    var offset : Int { get set }
     
-}
-public protocol ReaderContext {
-    associatedtype Configuration: FileConfiguration
-    
-    var offset : Int {get}
+    var bigEndian : Bool { get }
     
     var notify: ((Output) -> Void)? {get}
     
-    init(using configuration: Configuration, out: ((Output) -> Void)?)
+    var head : StackElement? { get }
+    
+    func push(_ node: AnyReadable, size: Int?)
+    
+    func pop() throws -> AnyReadable?
+    
+    /// factory method ot create new instances based on information readable somewhere in the raw data.
+    func next(_ data: UnsafeRawBufferPointer) throws -> (new: AnyReadable?, upperBound: Int?)
+}
+
+open class ReaderContext<Configuration: FileConfiguration> : Context {
+    
+    var config : Configuration
+    
+    /// Node Stack
+    var stack : [StackElement] = []
+    
+    /// reader position in the raw data
+    public var offset: Int = 0
+    
+    public var bigEndian: Bool {
+        return config.bigEndian
+    }
+    
+    public var notify: ((Output) -> Void)? = nil
+    
+    public init(using configuration: Configuration, out: ((Output) -> Void)?){
+        self.config = configuration
+        self.notify = out
+        
+    }
+    
+    /// factory method ot create new instances based on information readable somewhere in the raw data.
+    public func next(_ data: UnsafeRawBufferPointer) throws -> (new: AnyReadable?, upperBound: Int?){
+        try config.next(data, context: self)
+    }
+    
+    public func push(_ node: AnyReadable, size: Int?){
+        
+        if let size = size {
+            stack.append(.init(node, offset, offset+size))
+        } else {
+            stack.append(.init(node, offset, nil))
+        }
+    }
+    
+    public func pop() throws -> AnyReadable? {
+        
+        if let element = stack.popLast(){
+            
+            if let end = element.endOffset {
+                
+                // end was expected
+                
+                if offset < end {
+                    
+                    // offset before expected end - that is recoverable
+                    if !config.ignoreRecoverableErrors {
+                        // throw error as we are missing data
+                        throw ReaderError.missalignedData(ErrorStack(element.readable.debugSymbol, type(of: element.readable), offset), end)
+                        
+                    } else {
+                        notify?(Warning("Offset \(offset) too small", element.startOffset, element.endOffset, node: type(of: element.readable)))
+                        print("WARN: Offset \(offset) < \(end) on \(type(of: element.readable))")
+                        // move offset to expected end of box
+                        offset = end
+                    }
+                }
+                
+                if offset > end {
+                    // offset behind expected end - that is never good
+                    throw ReaderError.missalignedData(ErrorStack(element.readable.debugSymbol, type(of: element.readable), offset), end)
+                }
+                
+            } else {
+                // no end was expected, so just keep the offset where it is
+
+                print("Offset: \(offset)")
+            }
+            
+
+            return element.readable
+        } else {
+            return nil
+        }
+    }
+    
+    public var head : StackElement? {
+        return stack.last
+    }
+    
 }

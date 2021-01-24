@@ -1,6 +1,6 @@
 /*
  
- Copyright (c) <2020>
+ Copyright (c) <2021>
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -21,40 +21,4 @@
  SOFTWARE.
  
  */
-
 import Foundation
-
-public typealias FixedChar8 = UInt8
-public typealias FixedChar16 = UInt16
-public typealias FixedChar32 = UInt32
-public typealias FixedChar64 = UInt64
-
-extension FixedWidthInteger {
-    
-    public init?(_ from: String, encoding: String.Encoding = .utf8){
-        
-        if let v = from.data(using: encoding)?.withUnsafeBytes({ ptr in
-            ptr.load(as: Self.self)
-        }){
-            self.init(v)
-        } else {
-            return nil
-        }
-    }
-    
-    func string(_ encoding: String.Encoding = .utf8) -> String? {
-        var me = self
-        let data = Data(bytes: &me, count: MemoryLayout<Self>.size)
-        return String(data: data, encoding: encoding)
-    }
-}
-
-extension Array where Element : FixedWidthInteger {
-    
-    public func string(_ encoding: String.Encoding = .utf8) -> String? {
-        var me = self
-        let data = Data(bytes: &me, count: self.count * MemoryLayout<Element>.size)
-        return String(data: data, encoding: encoding)
-    }
-    
-}

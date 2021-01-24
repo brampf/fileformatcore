@@ -92,10 +92,10 @@ public struct ErrorStack : Swift.Error, CustomStringConvertible {
         self.offset = offset
         
         self.path = file
-        self.line = line-1
+        self.line = line
     }
     
-    public init<C: ReaderContext>(_ symbol: String?, _ any: Any, _ context: C,  line : Int = #line, file: String = #filePath) {
+    public init<C: Context>(_ symbol: String?, _ any: Any, _ context: C,  line : Int = #line, file: String = #filePath) {
         
         self.name = symbol ?? "_"
         self.type = Swift.type(of: any)
@@ -103,7 +103,7 @@ public struct ErrorStack : Swift.Error, CustomStringConvertible {
         self.offset = context.offset
         
         self.path = file
-        self.line = line-1
+        self.line = line
     }
     
     public var description: String {

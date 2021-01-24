@@ -9,7 +9,7 @@ let package = Package(
         // Products define the executables and libraries a package produces, and make them visible to other packages.
         .library(
             name: "FileFormatCore",
-            targets: ["FileReader"]),
+            targets: ["FileReader","DataTypes"]),
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
@@ -21,11 +21,17 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
             name: "FileReader",
-            dependencies: ["UInt4"]),
+            dependencies: ["DataTypes"]
+            ,swiftSettings: [.define("PARSER_TRACE", .when(configuration: .debug))]
+        ),
+        .target(
+            name: "DataTypes",
+            dependencies: ["UInt4"]
+        ),
         .testTarget(
             name: "FileFormatTests",
-            dependencies: ["FileReader"],
-            swiftSettings: [.define("PARSER_TRACE", .when(configuration: .debug))]
+            dependencies: ["FileReader"]
+            ,swiftSettings: [.define("PARSER_TRACE", .when(configuration: .debug))]
             )
     ]
 )

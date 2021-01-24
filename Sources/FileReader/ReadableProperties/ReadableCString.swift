@@ -1,6 +1,6 @@
 /*
  
- Copyright (c) <2020>
+ Copyright (c) <2021>
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -24,8 +24,27 @@
 
 import Foundation
 
-public protocol Leaf {
-    associatedtype Parameter : Any
+@propertyWrapper public final class ReadableCString : ReadableProperty {
     
-    init?(_ data: Slice<UnsafeRawBufferPointer>, with parameter: Parameter?) throws 
+    public var encoding : String.Encoding = .utf8
+    
+    public var wrappedValue : String? = nil
+    
+    public init() {
+        //
+    }
+    
+    public init(_ encoding: String.Encoding = .utf8, wrappedValue initialValue: String?){
+        self.wrappedValue = initialValue
+    }
+    
+    public func read(_ data: UnsafeRawBufferPointer, context: inout Context, _ symbol: String?) throws {
+        
+        wrappedValue = try data.read(&context.offset, upperBound: context.head?.endOffset ?? data.count, symbol)
+    }
+    
+    public var byteSize: Int {
+        (wrappedValue?.count ?? 0)
+    }
+    
 }
