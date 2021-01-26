@@ -1,6 +1,6 @@
 /*
  
- Copyright (c) <2020>
+ Copyright (c) <2021>
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -22,18 +22,25 @@
  
  */
 
-import Foundation
-
-public struct StackElement {
+extension FixedWidthInteger {
     
-    public let readable : AnyReadable
-    public let startOffset : Int
-    public let endOffset : Int?
-    
-    init(_ readable: AnyReadable, _ start: Int, _ end: Int?) {
-        self.readable = readable
-        self.startOffset = start
-        self.endOffset = end
+    /// Read `FixedWidthInteger`
+    func read(_ bytes: UnsafeRawBufferPointer, at offset: inout Int, byteSwapped : Bool = false, _ name : String? = nil) throws -> Self {
+        
+        // make sure that the offset is within the allowed bounds
+        guard offset >= 0 && offset <= bytes.count - MemoryLayout<Self>.size else {
+            throw ReaderError.invalidMemoryAddress(ErrorStack(name, Self.self, offset), bytes.count - MemoryLayout<Self>.size)
+        }
+        
+        /// access the memory
+        guard let val = bytes.baseAddress?.advanced(by: offset).assumingMemoryBound(to: Self.self).pointee else {
+            throw ReaderError.incompatibleDataFormat(ErrorStack(name, Self.self, offset))
+        }
+        
+        /// move the pointer
+        offset += MemoryLayout<Self>.size
+        /// return the requested value
+        return byteSwapped ? val.byteSwapped : val
     }
     
 }

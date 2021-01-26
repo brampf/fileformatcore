@@ -22,15 +22,49 @@
  
  */
 
-public protocol FileConfiguration {
+import Foundation
+
+@propertyWrapper public final class ReadableString : ReadableProperty {
     
-    // creates a standard configuration
-    init()
+    public var lenght : Int? = nil
     
-    /// factory method ot create new instances based on information readable somewhere in the raw data.
-    func next(_ data: UnsafeRawBufferPointer, context: Context) throws -> (new: AnyReadable?, upperBound: Int?)
+    public var encoding : String.Encoding = .utf8
     
-    var bigEndian : Bool { get }
+    public var wrappedValue : String? = nil
     
-    var ignoreRecoverableErrors : Bool { get }
+    public init() {
+        //
+    }
+    
+    public init(_ len: Int){
+        self.lenght = len
+    }
+    
+    public init(_ len: Int, wrappedValue: String?){
+        self.lenght = len
+        self.wrappedValue = wrappedValue
+    }
+    
+    public init(wrappedValue: String){
+        self.lenght = wrappedValue.count
+        self.wrappedValue = wrappedValue
+    }
+    
+    public init(_ encoding: String.Encoding = .utf8, wrappedValue initialValue: String?){
+        self.wrappedValue = initialValue
+    }
+    
+}
+
+extension ReadableString {
+    
+    public func read(_ data: UnsafeRawBufferPointer, context: inout Context, _ symbol: String?) throws {
+        
+        wrappedValue = try data.read(&context.offset, len: context.head?.endOffset ?? data.count, symbol)
+    }
+    
+    public var byteSize: Int {
+        (wrappedValue?.count ?? 0)
+    }
+    
 }

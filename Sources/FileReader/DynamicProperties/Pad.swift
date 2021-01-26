@@ -21,4 +21,31 @@
  SOFTWARE.
  
  */
+
 import Foundation
+
+@propertyWrapper public final class Pad : ReadableProperty {
+    
+    public var toSize : Int = 0
+    
+    public var wrappedValue : UInt8
+    
+    public init(_ size: Int, wrappedValue initialValue: UInt8) {
+        self.toSize = size
+        self.wrappedValue = initialValue
+    }
+    
+}
+
+extension Pad {
+    
+    public func read(_ data: UnsafeRawBufferPointer, context: inout Context, _ symbol: String?) throws {
+        
+        let factor : Double = Double(context.offset) / Double(toSize)
+        context.offset = toSize * Int(factor.rounded(.up))
+    }
+    
+    public var byteSize: Int {
+        0
+    }
+}

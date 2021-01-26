@@ -24,28 +24,33 @@
 
 import Foundation
 
-@propertyWrapper public final class ReadableUnboundedString : ReadableProperty {
+@propertyWrapper public final class ReadableChild<R: AnyReadable> {
     
-    public var encoding : String.Encoding = .utf8
+    public var wrappedValue : R? = nil
     
-    public var wrappedValue : String? = nil
     
     public init() {
         //
     }
     
-    public init(_ encoding: String.Encoding = .utf8, wrappedValue initialValue: String?){
+    public init(wrappedValue initialValue: R?){
         self.wrappedValue = initialValue
     }
     
+    public var debugDescription: String {
+        "\(R.self)"
+    }
+}
+
+extension ReadableChild : ReadableProperty {
+    
     public func read(_ data: UnsafeRawBufferPointer, context: inout Context, _ symbol: String?) throws {
-        
-        wrappedValue = try data.read(&context.offset, len: context.head?.endOffset, encoding: encoding, symbol)
-       
+        if let new = try Self.read(data, context: &context) as? R {
+            wrappedValue = new
+        }
     }
     
     public var byteSize: Int {
-        (wrappedValue?.count ?? 0) + 1
+        wrappedValue?.byteSize ?? 0
     }
-    
 }

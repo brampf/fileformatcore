@@ -1,6 +1,6 @@
 /*
  
- Copyright (c) <2020>
+ Copyright (c) <2021>
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -24,16 +24,30 @@
 
 import Foundation
 
-public struct StackElement {
+@propertyWrapper public final class ReadableCustom<C: CustomReadable> : ReadableProperty {
+        
+    public var wrappedValue: C? = nil
     
-    public let readable : AnyReadable
-    public let startOffset : Int
-    public let endOffset : Int?
+    public init() {
+        
+    }
     
-    init(_ readable: AnyReadable, _ start: Int, _ end: Int?) {
-        self.readable = readable
-        self.startOffset = start
-        self.endOffset = end
+    public init(wrappedValue initialValue: C?){
+        self.wrappedValue = initialValue
+    }
+    
+}
+
+extension ReadableCustom {
+    
+    
+    public func read(_ data: UnsafeRawBufferPointer, context: inout Context, _ symbol: String?) throws {
+        
+        try wrappedValue?.readManually(data, context: &context)
+    }
+    
+    public var byteSize: Int {
+        wrappedValue?.byteSize ?? 0
     }
     
 }

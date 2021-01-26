@@ -1,6 +1,6 @@
 /*
  
- Copyright (c) <2020>
+ Copyright (c) <2021>
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -24,16 +24,40 @@
 
 import Foundation
 
-public struct StackElement {
+protocol ReaderBound {
     
-    public let readable : AnyReadable
-    public let startOffset : Int
-    public let endOffset : Int?
+}
+
+struct EOF : ReaderBound {
     
-    init(_ readable: AnyReadable, _ start: Int, _ end: Int?) {
-        self.readable = readable
-        self.startOffset = start
-        self.endOffset = end
+}
+
+struct Offset : ReaderBound {
+    
+    var position : Int
+    
+    init(_ position: Int){
+        self.position = position
+    }
+}
+
+struct ByteSequence : ReaderBound {
+    
+    var bytes : [UInt8]
+    
+    init(_ bytes: UInt8...){
+        self.bytes = bytes
+    }
+}
+
+struct Property<R: ReadableRoot, Value> : ReaderBound {
+    
+    var path: KeyPath<R,Value>
+    var value: Value
+    
+    init(_ path: KeyPath<R,Value>, _ value: Value){
+        self.path = path
+        self.value = value
     }
     
 }

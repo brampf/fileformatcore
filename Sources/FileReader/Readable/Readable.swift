@@ -26,7 +26,7 @@
  Marker protocol for a struct or object which can (and shall) be read by the parser
  */
 public protocol Readable : AnyReadable, CustomDebugStringConvertible {
- 
+    
     mutating func read(_ data: UnsafeRawBufferPointer, context: inout Context, _ symbol: String?) throws
     
     var byteSize : Int {get}

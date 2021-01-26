@@ -22,32 +22,51 @@
  
  */
 
+
 import Foundation
 
-@propertyWrapper public final class ReadableCString : ReadableProperty {
+@propertyWrapper public final class ReadableList<F: FixedWidthInteger> : ReadableProperty {
     
-    public var encoding : String.Encoding = .utf8
+    public var length : Int? = nil
     
-    public var wrappedValue : String? = nil
+    public var wrappedValue : [F] = []
     
     public init() {
         //
     }
     
-    public init(_ encoding: String.Encoding = .utf8, wrappedValue initialValue: String?){
-        self.wrappedValue = initialValue
+    public init(len: Int){
+        self.length = len
     }
     
+    public init(len: Int, wrappedValue: [F]){
+        self.length = len
+        self.wrappedValue = wrappedValue
+    }
+
 }
 
-extension ReadableCString {
+extension ReadableList {
     
     public func read(_ data: UnsafeRawBufferPointer, context: inout Context, _ symbol: String?) throws {
         
-        wrappedValue = try data.read(&context.offset, upperBound: context.head?.endOffset ?? data.count, symbol)
+        if let len = length {
+            // fixed length
+            wrappedValue = try data.read(&context.offset, len: len, symbol)
+            
+        } else if let end = context.head?.endOffset {
+            // end of box
+            wrappedValue = try data.read(&context.offset, upperBound: end, symbol)
+        } else {
+            // end of file
+            wrappedValue = try data.read(&context.offset, upperBound: data.count, symbol)
+        }
+    
     }
     
     public var byteSize: Int {
-        (wrappedValue?.count ?? 0) + 1
+        MemoryLayout<F>.size * wrappedValue.count
     }
+    
+    
 }

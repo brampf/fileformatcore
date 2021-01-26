@@ -8,6 +8,17 @@ final class ReaderTests: XCTestCase {
         ("testExample", testExample),
     ]
     
+    class File : ReadableRoot {
+        typealias Configuration = TestConfig
+        
+        @ReadableChild var outer: Outer?
+    
+        required init() {
+            //
+        }
+        
+    }
+    
     class Outer : Readable {
         
         @ReadableInteger var index : UInt16
@@ -33,6 +44,10 @@ final class ReaderTests: XCTestCase {
     }
     
     class TestConfig : FileConfiguration {
+        
+        required init(){
+            
+        }
         
         func next(_ data: UnsafeRawBufferPointer, context: Context) throws -> (new: AnyReadable?, upperBound: Int?) {
             if context.head?.readable is Outer {
@@ -95,6 +110,36 @@ final class ReaderTests: XCTestCase {
         
     }
     
+    func testParser2() {
+        
+        let bytes : [UInt8] = [
+            0,23, // index
+            52,
+            50,
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            
+        ]
+        
+        let file = try! File.read(Data(bytes))!
+        
+        
+        XCTAssertEqual(file.outer!.index, 23)
+        XCTAssertEqual(file.outer!.inner.count, 6)
+        XCTAssertEqual(file.outer!.chars, "42")
+        XCTAssertEqual(file.outer!.inner[0].number, 1)
+        XCTAssertEqual(file.outer!.inner[1].number, 2)
+        XCTAssertEqual(file.outer!.inner[2].number, 3)
+        XCTAssertEqual(file.outer!.inner[3].number, 4)
+        XCTAssertEqual(file.outer!.inner[4].number, 5)
+        XCTAssertEqual(file.outer!.inner[5].number, 6)
+    }
+    
     
     func testExample() {
 
@@ -113,7 +158,7 @@ final class ReaderTests: XCTestCase {
         var offset = 0
         
         data.withUnsafeBytes{ ptr in
-            XCTAssertEqual(try? ptr.read(&offset), "mim")
+            XCTAssertEqual(try? ptr.read(&offset, upperBound: data.count), "mim")
             XCTAssertEqual(try? ptr.read(&offset), "eli")
         }
         

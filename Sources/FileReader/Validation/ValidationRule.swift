@@ -1,6 +1,6 @@
 /*
  
- Copyright (c) <2020>
+ Copyright (c) <2021>
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -24,16 +24,11 @@
 
 import Foundation
 
-public struct StackElement {
+public protocol ValidationRule {
+    associatedtype R: Readable
+    associatedtype Value
     
-    public let readable : AnyReadable
-    public let startOffset : Int
-    public let endOffset : Int?
+    var path : KeyPath<R,Value> {get}
     
-    init(_ readable: AnyReadable, _ start: Int, _ end: Int?) {
-        self.readable = readable
-        self.startOffset = start
-        self.endOffset = end
-    }
-    
+    func check(value: Value) -> (unrecoverable: Error?, recoverable: Output?)
 }
