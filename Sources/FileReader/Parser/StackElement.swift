@@ -1,6 +1,6 @@
 /*
  
- Copyright (c) <2021>
+ Copyright (c) <2020>
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -24,14 +24,16 @@
 
 import Foundation
 
-protocol ReadableProperty : Readable {
+public struct StackElement {
     
-}
-
-extension ReadableProperty {
+    public let readable : ReadableElement
+    public let startOffset : Int
+    public let endOffset : Int?
     
-    public var debugSymbol: String {
-        "\(type(of: self))"
+    init(_ readable: ReadableElement, _ start: Int, _ end: Int?) {
+        self.readable = readable
+        self.startOffset = start
+        self.endOffset = end
     }
     
 }

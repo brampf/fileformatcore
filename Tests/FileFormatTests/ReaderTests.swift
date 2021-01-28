@@ -3,7 +3,8 @@ import FileReader
 
 final class ReaderTests: XCTestCase {
 
-
+/*
+    
     static var allTests = [
         ("testExample", testExample),
     ]
@@ -139,7 +140,7 @@ final class ReaderTests: XCTestCase {
         XCTAssertEqual(file.outer!.inner[4].number, 5)
         XCTAssertEqual(file.outer!.inner[5].number, 6)
     }
-    
+    */
     
     func testExample() {
 

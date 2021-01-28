@@ -24,40 +24,34 @@
 
 import Foundation
 
-protocol ReaderBound {
+public protocol BaseFile : ReadableFrame {
+    associatedtype Configuration : FileConfiguration
     
+    init()
 }
 
-struct EOF : ReaderBound {
-    
-}
 
-struct Offset : ReaderBound {
+extension BaseFile {
     
-    var position : Int
-    
-    init(_ position: Int){
-        self.position = position
-    }
-}
-
-struct ByteSequence : ReaderBound {
-    
-    var bytes : [UInt8]
-    
-    init(_ bytes: UInt8...){
-        self.bytes = bytes
-    }
-}
-
-struct Property<R: ReadableRoot, Value> : ReaderBound {
-    
-    var path: KeyPath<R,Value>
-    var value: Value
-    
-    init(_ path: KeyPath<R,Value>, _ value: Value){
-        self.path = path
-        self.value = value
+    public static func read(data: Data) throws -> Self? {
+        
+        let config = Configuration()
+        var context : Context = ReaderContext(using: config) { out in
+            print(out.msg)
+        }
+        
+        return try data.withUnsafeBytes { ptr in
+            try new(ptr, with: &context, "\(type(of: self))")
+        }
+        
     }
     
+}
+
+extension BaseFile {
+    
+    public static func size(_ data: UnsafeRawBufferPointer, with context: inout Context) -> Int? {
+        
+        return data.endIndex
+    }
 }

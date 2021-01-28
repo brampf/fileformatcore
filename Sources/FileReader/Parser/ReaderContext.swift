@@ -34,12 +34,11 @@ public protocol Context {
     
     var head : StackElement? { get }
     
-    func push(_ node: AnyReadable, size: Int?)
+    func push(_ node: ReadableElement, size: Int?)
     
-    func pop() throws -> AnyReadable?
-    
-    /// factory method ot create new instances based on information readable somewhere in the raw data.
-    func next(_ data: UnsafeRawBufferPointer) throws -> (new: AnyReadable?, upperBound: Int?)
+    func pop() throws -> ReadableElement?
+
+    subscript<V>(_ uuid: UUID) -> V? {get set}
 }
 
 open class ReaderContext<Configuration: FileConfiguration> : Context {
@@ -48,6 +47,8 @@ open class ReaderContext<Configuration: FileConfiguration> : Context {
     
     /// Node Stack
     var stack : [StackElement] = []
+    /// Stack of transient values
+    var transients : [UUID: Any] = [:]
     
     /// reader position in the raw data
     public var offset: Int = 0
@@ -64,12 +65,7 @@ open class ReaderContext<Configuration: FileConfiguration> : Context {
         
     }
     
-    /// factory method ot create new instances based on information readable somewhere in the raw data.
-    public func next(_ data: UnsafeRawBufferPointer) throws -> (new: AnyReadable?, upperBound: Int?){
-        try config.next(data, context: self)
-    }
-    
-    public func push(_ node: AnyReadable, size: Int?){
+    public func push(_ node: ReadableElement, size: Int?){
         
         if let size = size {
             stack.append(.init(node, offset, offset+size))
@@ -78,7 +74,9 @@ open class ReaderContext<Configuration: FileConfiguration> : Context {
         }
     }
     
-    public func pop() throws -> AnyReadable? {
+    public func pop() throws -> ReadableElement? {
+        
+        transients.removeAll()
         
         if let element = stack.popLast(){
             
@@ -91,7 +89,7 @@ open class ReaderContext<Configuration: FileConfiguration> : Context {
                     // offset before expected end - that is recoverable
                     if !config.ignoreRecoverableErrors {
                         // throw error as we are missing data
-                        throw ReaderError.missalignedData(ErrorStack(element.readable.debugSymbol, type(of: element.readable), offset), end)
+                        throw ReaderError.missalignedData(ErrorStack(nil, type(of: element.readable), offset), end)
                         
                     } else {
                         notify?(Warning("Offset \(offset) too small", element.startOffset, element.endOffset, node: type(of: element.readable)))
@@ -103,13 +101,11 @@ open class ReaderContext<Configuration: FileConfiguration> : Context {
                 
                 if offset > end {
                     // offset behind expected end - that is never good
-                    throw ReaderError.missalignedData(ErrorStack(element.readable.debugSymbol, type(of: element.readable), offset), end)
+                    throw ReaderError.missalignedData(ErrorStack(nil, type(of: element.readable), offset), end)
                 }
                 
             } else {
                 // no end was expected, so just keep the offset where it is
-
-                print("Offset: \(offset)")
             }
             
 
@@ -121,6 +117,15 @@ open class ReaderContext<Configuration: FileConfiguration> : Context {
     
     public var head : StackElement? {
         return stack.last
+    }
+    
+    public subscript<V>(_ uuid: UUID) -> V? {
+        get{
+            transients[uuid] as? V
+        }
+        set{
+            transients[uuid] = newValue
+        }
     }
     
 }

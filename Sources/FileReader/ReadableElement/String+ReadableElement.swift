@@ -24,28 +24,29 @@
 
 import Foundation
 
-@propertyWrapper public final class Pad : ReadableProperty {
-    
-    public var toSize : Int = 0
-    
-    public var wrappedValue : UInt8
-    
-    public init(_ size: Int, wrappedValue initialValue: UInt8) {
-        self.toSize = size
-        self.wrappedValue = initialValue
-    }
-    
-}
 
-extension Pad {
+extension String : ReadableElement {
     
-    public func read(_ data: UnsafeRawBufferPointer, context: inout Context, _ symbol: String?) throws {
+    /// Read `FixedWidthInteger`
+    public static func new(_ bytes: UnsafeRawBufferPointer, with context: inout Context, _ name: String?) throws -> Self? {
+     
+        print("[\(String(describing: context.offset).padding(toLength: 8, withPad: " ", startingAt: 0))] READ \(name ?? "") : \(type(of: self))")
         
-        let factor : Double = Double(context.offset) / Double(toSize)
-        context.offset = toSize * Int(factor.rounded(.up))
+        let end = context.head?.endOffset ?? bytes.endIndex
+        
+        // make sure that the offset is within the allowed bounds
+        guard context.offset >= 0 && context.offset < end else {
+            throw ReaderError.invalidMemoryAddress(ErrorStack(name, String.self, context.offset),end)
+        }
+        
+        let data = Data(bytes[context.offset..<end])
+        
+        // move the pointer beyond the null but not beyond the bounds
+        context.offset += data.count
+        return String(data: data, encoding: .utf8)
     }
     
     public var byteSize: Int {
-        0
+        self.count * MemoryLayout<Self.Element>.size
     }
 }

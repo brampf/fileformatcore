@@ -24,22 +24,34 @@
 
 import Foundation
 
-@propertyWrapper public final class Skip : ReadableProperty {
+@propertyWrapper public final class Transient<Parent: ReadableElement, Value: ReadableElement> {
     
-    public var bytes : Int = 0
+    let uuid: UUID = UUID()
     
-    public var wrappedValue : Void
+    var bound : KeyPath<Parent,Value>
     
-    public var byteSize: Int {
-        bytes
+    public var wrappedValue: Value
+    
+    public init(wrappedValue initialValue: Value, _ bound: KeyPath<Parent,Value>){
+        self.bound = bound
+        self.wrappedValue = initialValue
+    }
+}
+
+extension Transient : ReadableWrapper {
+    
+    func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws {
+        
+        if let value : Value = try Value.new(bytes, with: &context, symbol){
+            // store in context to access later
+            context[uuid] = value
+        }
+        
     }
     
-    public init(bytes: Int) {
-        self.bytes = bytes
+    func debugLayout(_ level: Int = 0) -> String {
+        wrappedValue.debugLayout(level+1)
     }
     
-    public func read(_ data: UnsafeRawBufferPointer, context: inout Context, _ symbol: String?) throws {
-        data.skip(bytes, &context.offset, symbol ?? "SKIP")
-    }
     
 }

@@ -1,6 +1,6 @@
 /*
  
- Copyright (c) <2020>
+ Copyright (c) <2021>
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -24,16 +24,33 @@
 
 import Foundation
 
-public struct StackElement {
+@propertyWrapper public final class Pad {
     
-    public let readable : AnyReadable
-    public let startOffset : Int
-    public let endOffset : Int?
+    public var toSize : Int = 0
     
-    init(_ readable: AnyReadable, _ start: Int, _ end: Int?) {
-        self.readable = readable
-        self.startOffset = start
-        self.endOffset = end
+    public var wrappedValue : UInt8
+    
+    public init(_ size: Int, wrappedValue initialValue: UInt8) {
+        self.toSize = size
+        self.wrappedValue = initialValue
+    }
+    
+}
+
+extension Pad : ReadableWrapper {
+    
+    func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws {
+        
+        let factor : Double = Double(context.offset) / Double(toSize)
+        context.offset = toSize * Int(factor.rounded(.up))
+    }
+    
+    public var byteSize: Int {
+        0
+    }
+    
+    func debugLayout(_ level: Int = 0) -> String {
+        "Padding"
     }
     
 }

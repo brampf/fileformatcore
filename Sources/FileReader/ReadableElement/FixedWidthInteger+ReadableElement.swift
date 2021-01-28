@@ -25,22 +25,59 @@
 extension FixedWidthInteger {
     
     /// Read `FixedWidthInteger`
-    func read(_ bytes: UnsafeRawBufferPointer, at offset: inout Int, byteSwapped : Bool = false, _ name : String? = nil) throws -> Self {
+    public static func new(_ bytes: UnsafeRawBufferPointer, with context: inout Context, _ name: String?) throws -> Self? {
+        
+        print("[\(String(describing: context.offset).padding(toLength: 8, withPad: " ", startingAt: 0))] READ \(name ?? "") : \(type(of: self))")
         
         // make sure that the offset is within the allowed bounds
-        guard offset >= 0 && offset <= bytes.count - MemoryLayout<Self>.size else {
-            throw ReaderError.invalidMemoryAddress(ErrorStack(name, Self.self, offset), bytes.count - MemoryLayout<Self>.size)
+        guard context.offset >= 0 && context.offset <= bytes.count - MemoryLayout<Self>.size else {
+            throw ReaderError.invalidMemoryAddress(ErrorStack(name, Self.self, context.offset), bytes.count - MemoryLayout<Self>.size)
         }
         
         /// access the memory
-        guard let val = bytes.baseAddress?.advanced(by: offset).assumingMemoryBound(to: Self.self).pointee else {
-            throw ReaderError.incompatibleDataFormat(ErrorStack(name, Self.self, offset))
+        guard let val = bytes.baseAddress?.advanced(by: context.offset).assumingMemoryBound(to: Self.self).pointee else {
+            throw ReaderError.incompatibleDataFormat(ErrorStack(name, Self.self, context.offset))
         }
         
         /// move the pointer
-        offset += MemoryLayout<Self>.size
+        context.offset += MemoryLayout<Self>.size
         /// return the requested value
-        return byteSwapped ? val.byteSwapped : val
+        return context.bigEndian ? val.byteSwapped : val
     }
+    
+    public var byteSize: Int {
+        MemoryLayout<Self>.size
+    }
+}
+
+extension Int64 : ReadableElement {
+    
+}
+
+extension Int32 : ReadableElement {
+    
+}
+
+extension Int16 : ReadableElement {
+    
+}
+
+extension Int8 : ReadableElement {
+    
+}
+
+extension UInt64 : ReadableElement {
+    
+}
+
+extension UInt32 : ReadableElement {
+    
+}
+
+extension UInt16 : ReadableElement {
+    
+}
+
+extension UInt8 : ReadableElement {
     
 }

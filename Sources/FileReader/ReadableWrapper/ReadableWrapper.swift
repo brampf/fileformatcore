@@ -22,10 +22,9 @@
  
  */
 
-import Foundation
-
-public protocol CustomReadable : AnyReadable {
-
-    mutating func readManually(_ data: UnsafeRawBufferPointer, context: inout Context) throws
+protocol ReadableWrapper {
     
+    mutating func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws
+    
+    func debugLayout(_ level: Int) -> String
 }

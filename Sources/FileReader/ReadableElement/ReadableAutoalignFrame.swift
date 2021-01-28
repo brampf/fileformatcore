@@ -21,13 +21,19 @@
  SOFTWARE.
  
  */
+import Foundation
 
-public protocol FileConfiguration {
+/// Automatically sizes the bounds of the frame to that of the parent frame
+public protocol ReadableAutoalignFrame : ReadableFrame {
     
-    // creates a standard configuration
-    init()
     
-    var bigEndian : Bool { get }
+}
+
+extension ReadableAutoalignFrame {
     
-    var ignoreRecoverableErrors : Bool { get }
+    public static func size(_ data: UnsafeRawBufferPointer, with context: inout Context) -> Int? {
+        
+        nil // context.head?.endOffset
+    }
+    
 }

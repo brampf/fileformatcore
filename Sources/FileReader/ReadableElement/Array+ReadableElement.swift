@@ -22,12 +22,45 @@
  
  */
 
-public protocol FileConfiguration {
+extension Array : ReadableElement where Element : ReadableElement {
     
-    // creates a standard configuration
-    init()
+    public static func new(_ bytes: UnsafeRawBufferPointer, with context: inout Context, _ name: String?) throws -> Self? {
+        
+        let upperBound = context.head?.endOffset ?? bytes.endIndex
+        
+        var ret = [Element]()
+        
+        while context.offset < upperBound {
+            if let new = try Element.new(bytes, with: &context, name) {
+                ret.append(new)
+            }
+        }
+        
+        return ret
+    }
     
-    var bigEndian : Bool { get }
+    public var byteSize: Int {
+        self.reduce(into: 0) { $0 += $1.byteSize }
+    }
     
-    var ignoreRecoverableErrors : Bool { get }
+}
+
+extension Array where Element : ReadableElement {
+    
+    public var count8 : UInt8 {
+        UInt8(count)
+    }
+    
+    public var count16 : UInt16 {
+        UInt16(count)
+    }
+    
+    public var count32 : UInt32 {
+        UInt32(count)
+    }
+    
+    public var count64 : UInt64 {
+        UInt64(count)
+    }
+    
 }

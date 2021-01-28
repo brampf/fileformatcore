@@ -21,13 +21,6 @@
  SOFTWARE.
  
  */
+import Foundation
 
-public protocol FileConfiguration {
-    
-    // creates a standard configuration
-    init()
-    
-    var bigEndian : Bool { get }
-    
-    var ignoreRecoverableErrors : Bool { get }
-}
+typealias CString = [CChar]

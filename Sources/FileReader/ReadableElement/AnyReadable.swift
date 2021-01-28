@@ -22,13 +22,6 @@
  
  */
 
-import Foundation
-
-public protocol ValidationRule {
-    associatedtype R: Readable
-    associatedtype Value
+protocol AnyReadable : CustomDebugStringConvertible {
     
-    var path : KeyPath<R,Value> {get}
-    
-    func check(value: Value) -> (unrecoverable: Error?, recoverable: Output?)
 }

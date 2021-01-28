@@ -22,15 +22,34 @@
  
  */
 
-public protocol AnyReadable {
+import Foundation
+
+@propertyWrapper public final class Skip {
     
-    ///
-    var debugSymbol : String { get }
+    public var bytes : Int = 0
     
-    var debugLayout : String { get }
+    public var wrappedValue : Void
     
-    var debugDescription: String { get }
+    public init(bytes: Int) {
+        self.bytes = bytes
+    }
     
-    /// size of this
-    var byteSize : Int { get }
+}
+
+extension Skip : ReadableWrapper {
+    
+    func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws {
+        bytes.skip(self.bytes, &context.offset, symbol ?? "SKIP")
+    }
+    
+    public var byteSize: Int {
+        bytes
+    }
+    
+    
+    func debugLayout(_ level: Int = 0) -> String {
+        "SKIP \(bytes)"
+    }
+    
+    
 }

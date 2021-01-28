@@ -22,12 +22,9 @@
  
  */
 
-public protocol FileConfiguration {
+import Foundation
+
+protocol ReadableValue : ReadableElement {
     
-    // creates a standard configuration
-    init()
     
-    var bigEndian : Bool { get }
-    
-    var ignoreRecoverableErrors : Bool { get }
 }
