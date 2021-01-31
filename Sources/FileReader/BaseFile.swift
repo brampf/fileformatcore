@@ -24,7 +24,11 @@
 
 import Foundation
 
-public protocol BaseFile : ReadableFrame {
+
+/**
+  The root Frame of the the whole file structure, offering convenience inistializers a
+ */
+public protocol BaseFile : ReadableAutoFrame {
     associatedtype Configuration : FileConfiguration
     
     init()
@@ -33,7 +37,10 @@ public protocol BaseFile : ReadableFrame {
 
 extension BaseFile {
     
-    public static func read(data: Data) throws -> Self? {
+    /**
+     Reads ta `BaseFile` from the bytes provided
+     */
+    public static func read(data: ContiguousBytes) throws -> Self? {
         
         let config = Configuration()
         var context : Context = ReaderContext(using: config) { out in
@@ -50,6 +57,7 @@ extension BaseFile {
 
 extension BaseFile {
     
+    /// Size of the `BaseFile`is the whole byte array for obvious reasons
     public static func size(_ data: UnsafeRawBufferPointer, with context: inout Context) -> Int? {
         
         return data.endIndex

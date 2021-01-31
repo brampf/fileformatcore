@@ -22,31 +22,21 @@
  
  */
 
-
-import Foundation
-
-@propertyWrapper public final class ReadableInteger<F: FixedWidthInteger> {
+public struct FixedNumberFrame<R: ReadableElement, F: FixedWidthInteger> : BoundType {
+    public typealias Value = [R]
     
-    public var wrappedValue : F = F.zero
+    public var bound : F
     
-    public init() {
-        //
-    }
-    
-    public init(wrappedValue: F){
-        self.wrappedValue = wrappedValue
-    }
-
-}
-
-extension ReadableInteger : ReadableProperty {
-    
-    public func read(_ data: UnsafeRawBufferPointer, context: inout Context, _ symbol: String?) throws {
+    public func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws -> Value? {
         
-        self.wrappedValue = try data.read(&context.offset, byteSwapped: true, symbol)
+        var new : [R] = .init()
+        
+        for _ in 0 ..< bound {
+            if let next = try R.new(bytes, with: &context, symbol) {
+                new.append(next)
+            }
+        }
+        return new
     }
     
-    public var byteSize: Int {
-        return MemoryLayout<F>.size
-    }
 }

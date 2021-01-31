@@ -26,7 +26,7 @@ final class NewReaderTests: XCTestCase {
         }
     }
     
-    struct Field : ReadableAutoalignFrame {
+    struct Field : ReadableAutoFrame {
         static func size(_ data: UnsafeRawBufferPointer, with context: inout Context) -> Int? {
             nil
         }
@@ -48,7 +48,7 @@ final class NewReaderTests: XCTestCase {
         
     }
     
-    struct Tuple : ReadableAutoalignFrame {
+    struct Tuple : ReadableAutoFrame {
         
         init() {
         }
@@ -109,7 +109,7 @@ final class NewReaderTests: XCTestCase {
     
         }
         
-        struct TestElement : ReadableAutoalignFrame {
+        struct TestElement : ReadableAutoFrame {
             
             @Persistent var number : UInt8 = 0
             
@@ -136,8 +136,155 @@ final class NewReaderTests: XCTestCase {
         print(new.debugLayout)
         
     }
-}
+    
+    
+    
+    func testElementProperty() {
+        
+        struct TestFile : BaseFile {
+            typealias Configuration = TestConfig
+            
+            @Persistent(equals: 8) var array : [UInt8] = []
+            
+            @Persistent var text: String? = nil
+        }
+        
+        let bytes : [UInt8] = [
+                0,1,2,3,4,5,6,7,8,9,50,52
+        ]
+        
+        let new = try! TestFile.read(data: Data(bytes))!
+        
+        XCTAssertEqual(new.array.count, 9)
+        XCTAssertEqual(new.array, [0,1,2,3,4,5,6,7,8])
+        XCTAssertEqual(new.text, "\t24")
+        
+    }
+    
+    func testChildProperty() {
+        
+        struct TestFile : BaseFile {
+            typealias Configuration = TestConfig
+            
+            @Persistent(\TestField.number, equals: 8) var array : [TestField] = []
+            
+            @Persistent var text: String? = nil
+        }
+        
+        struct TestField : ReadableAutoFrame {
+            
+            @Persistent var number : UInt8 = 0
+            
+        }
+        
+        let bytes : [UInt8] = [
+            0,1,2,3,4,5,6,7,8,9,50,52
+        ]
+        
+        let new = try! TestFile.read(data: Data(bytes))!
+        
+        XCTAssertEqual(new.array.count, 9)
+        XCTAssertEqual(new.array[8].number, 8)
+        XCTAssertEqual(new.text, "\t24")
+        
+    }
 
+    func testConditionalProperty() {
+        
+        struct TestFile : BaseFile {
+            typealias Configuration = TestConfig
+            
+            @Persistent(\TestField.number, equals: 8) var array : [TestField] = []
+            
+            @Persistent var text: String? = nil
+        }
+        
+        struct TestField : ReadableAutoFrame {
+            
+            @Persistent var number : UInt8 = 0
+            
+        }
+        
+        let bytes : [UInt8] = [
+            0,1,2,3,4,5,6,7,8,9,50,52
+        ]
+        
+        let new = try! TestFile.read(data: Data(bytes))!
+        
+        XCTAssertEqual(new.array.count, 9)
+        XCTAssertEqual(new.array[8].number, 8)
+        XCTAssertEqual(new.text, "\t24")
+        
+    }
+    
+    func testStringProperty() {
+        
+        struct TestFile : BaseFile {
+            typealias Configuration = TestConfig
+            
+            @Persistent(.cstring) var first = "Test"
+            
+            @Persistent var second: String? = nil
+        }
+        
+        let bytes : [UInt8] = [
+            52,50,0,0x74,0x65,0x73,0x74
+        ]
+        
+        let new = try! TestFile.read(data: Data(bytes))!
+        
+        XCTAssertEqual(new.first, "42")
+        XCTAssertEqual(new.second, "test")
+        
+    }
+    
+    
+    
+    func testCustomFrame() throws {
+        
+        struct TestFrame : ReadableFrame {
+            
+            var number : UInt32 = 0
+            var array : [UInt8] = []
+            
+            init() {
+                // default initializer
+            }
+            
+            
+            mutating func read(_ data: UnsafeRawBufferPointer, context: inout Context) throws {
+                
+                number = try data.read(&context.offset, byteSwapped: context.bigEndian)
+                
+                array = try data.read(&context.offset, upperBound: context.head?.endOffset ?? data.endIndex, byteSwapped: context.bigEndian)
+            }
+            
+            var byteSize: Int {
+                return 4 + array.byteSize
+            }
+            
+            
+            static func size(_ data: UnsafeRawBufferPointer, with context: inout Context) -> Int? {
+                nil
+            }
+            
+        }
+        
+        let bytes : [UInt8] = [0,0,0,32,1,2,3,4,5,6,7,8,9]
+        
+        var context : Context = ReaderContext(using: TestConfig(), out: nil
+        )
+        let frame = try bytes.withUnsafeBytes{ ptr in
+            try TestFrame.new(ptr, with: &context, nil)
+        }
+        
+        XCTAssertEqual(frame?.number, 32)
+        XCTAssertEqual(frame?.array, [1,2,3,4,5,6,7,8,9])
+        
+        print(frame?.array.map{$0.description})
+    }
+    
+}
 
 
 

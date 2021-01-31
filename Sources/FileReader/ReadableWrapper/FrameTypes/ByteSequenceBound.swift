@@ -22,6 +22,19 @@
  
  */
 
-protocol AnyReadable : CustomDebugStringConvertible {
+struct ByteSequence<R: ReadableElement> : BoundType {
+    typealias Value = String
     
+    public var bound : [UInt8]
+    
+    func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws -> Value? {
+        
+        let upperBound = context.head?.endOffset ?? bytes.endIndex
+        
+        let range = bytes.firstRange(of: bound, in: context.offset..<upperBound)
+        let length = (range?.startIndex ?? bytes.endIndex) - context.offset
+        
+        return try bytes.read(&context.offset, len: length , encoding: .utf8, symbol)
+        
+    }
 }

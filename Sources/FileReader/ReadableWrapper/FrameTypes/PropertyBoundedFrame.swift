@@ -24,29 +24,27 @@
 
 import Foundation
 
-
-extension String : ReadableElement {
+public struct CounterBoundedFrame<Parent: ReadableElement, R: ReadableElement, F: FixedWidthInteger & ReadableElement> : BoundType {
+    public  typealias  Value = [R]
     
-    /// Read `FixedWidthInteger`
-    public static func new(_ bytes: UnsafeRawBufferPointer, with context: inout Context, _ name: String?) throws -> Self? {
-     
-        print("[\(String(describing: context.offset).padding(toLength: 8, withPad: " ", startingAt: 0))] READ \(name ?? "") : \(type(of: self))")
+    public var bound : KeyPath<Parent,Transient<Parent,F>>
+    
+    public func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws -> Value? {
         
-        let end = context.head?.endOffset ?? bytes.endIndex
-        
-        // make sure that the offset is within the allowed bounds
-        guard context.offset >= 0 && context.offset < end else {
-            throw ReaderError.invalidMemoryAddress(ErrorStack(name, String.self, context.offset),end)
+        if let parent = context.head?.readable as? Parent {
+            let id = parent[keyPath: bound].uuid
+            let count : F = context[id] ?? .zero
+            
+            var new : [R] = .init()
+            
+            for _ in 0 ..< count {
+                if let next = try R.new(bytes, with: &context, symbol) {
+                    new.append(next)
+                }
+            }
+            return new
+        } else {
+            return []
         }
-        
-        let data = Data(bytes[context.offset..<end])
-        
-        // move the pointer beyond the null but not beyond the bounds
-        context.offset += data.count
-        return String(data: data, encoding: .utf8)
-    }
-    
-    public var byteSize: Int {
-        self.count * MemoryLayout<Self.Element>.size
     }
 }

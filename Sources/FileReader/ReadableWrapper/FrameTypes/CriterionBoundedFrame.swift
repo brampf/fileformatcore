@@ -22,49 +22,24 @@
  
  */
 
-import Foundation
-
-@propertyWrapper public final class ReadableString : ReadableProperty {
+public struct CriterionBoundedFrame<Parent: BaseFile, R: ReadableElement, Criterion: Equatable> : BoundType {
+    public typealias Value = [R]
     
-    public var lenght : Int? = nil
+    public var bound : KeyPath<Parent,Criterion>
+    public var criterion : Criterion
     
-    public var encoding : String.Encoding = .utf8
-    
-    public var wrappedValue : String? = nil
-    
-    public init() {
-        //
-    }
-    
-    public init(_ len: Int){
-        self.lenght = len
-    }
-    
-    public init(_ len: Int, wrappedValue: String?){
-        self.lenght = len
-        self.wrappedValue = wrappedValue
-    }
-    
-    public init(wrappedValue: String){
-        self.lenght = wrappedValue.count
-        self.wrappedValue = wrappedValue
-    }
-    
-    public init(_ encoding: String.Encoding = .utf8, wrappedValue initialValue: String?){
-        self.wrappedValue = initialValue
-    }
-    
-}
-
-extension ReadableString {
-    
-    public func read(_ data: UnsafeRawBufferPointer, context: inout Context, _ symbol: String?) throws {
+    public func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws -> Value? {
         
-        wrappedValue = try data.read(&context.offset, len: context.head?.endOffset ?? data.count, symbol)
+        var new : [R] = .init()
+        
+        let parent = context.root?.readable as? Parent
+        repeat {
+            if let next = try R.new(bytes, with: &context, symbol) {
+                new.append(next)
+            }
+            
+        } while context.offset < (context.head?.endOffset ?? bytes.endIndex) && parent != nil && parent![keyPath: bound] != criterion
+         
+        return new
     }
-    
-    public var byteSize: Int {
-        (wrappedValue?.count ?? 0)
-    }
-    
 }

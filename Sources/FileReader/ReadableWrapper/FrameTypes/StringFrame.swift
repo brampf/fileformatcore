@@ -24,28 +24,34 @@
 
 import Foundation
 
-@propertyWrapper public final class ReadableRawValue<R: RawRepresentable> : ReadableProperty {
+public struct StringFrame<Parent: ReadableElement, F: FixedWidthInteger & ReadableElement> : BoundType {
     
-    public var wrappedValue : R? = nil
+    public typealias Value = String
     
-    public init() {
-        //
+    public enum StringType {
+        case utf8
+        case utf16
+        case cstring
     }
     
-    public init(wrappedValue initialValue: R?){
-        self.wrappedValue = initialValue
+    public var bound : KeyPath<Parent,Transient<Parent,F>>?
+    public var type : StringType
+    
+    public init(bound: KeyPath<Parent,Transient<Parent,F>>? = nil, type: StringType){
+        self.bound = bound
+        self.type = type
     }
     
-}
+    public func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws -> Value? {
 
-extension ReadableRawValue {
-    
-    public func read(_ data: UnsafeRawBufferPointer, context: inout Context, _ symbol: String?) throws {
+        switch type {
+        case .cstring:
+            return try bytes.read(&context.offset, upperBound: context.head?.endOffset ?? bytes.count, symbol)
+
+        default:
+            return try bytes.read(&context.offset, len: context.head?.endOffset ?? bytes.count, symbol)
+        }
         
-        wrappedValue = try data.read(&context.offset, symbol)
     }
     
-    public var byteSize: Int {
-        MemoryLayout<R.RawValue>.size
-    }
 }

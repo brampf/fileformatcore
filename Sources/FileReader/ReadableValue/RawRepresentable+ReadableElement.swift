@@ -22,62 +22,32 @@
  
  */
 
-extension FixedWidthInteger {
+import Foundation
+
+extension RawRepresentable where RawValue : ReadableElement {
     
     /// Read `FixedWidthInteger`
     public static func new(_ bytes: UnsafeRawBufferPointer, with context: inout Context, _ name: String?) throws -> Self? {
         
-        print("[\(String(describing: context.offset).padding(toLength: 8, withPad: " ", startingAt: 0))] READ \(name ?? "") : \(type(of: self))")
-        
-        // make sure that the offset is within the allowed bounds
-        guard context.offset >= 0 && context.offset <= bytes.count - MemoryLayout<Self>.size else {
-            throw ReaderError.invalidMemoryAddress(ErrorStack(name, Self.self, context.offset), bytes.count - MemoryLayout<Self>.size)
-        }
-        
-        /// access the memory
-        guard let val = bytes.baseAddress?.advanced(by: context.offset).assumingMemoryBound(to: Self.self).pointee else {
-            throw ReaderError.incompatibleDataFormat(ErrorStack(name, Self.self, context.offset))
-        }
-        
-        /// move the pointer
-        context.offset += MemoryLayout<Self>.size
-        /// return the requested value
-        return context.bigEndian ? val.byteSwapped : val
+        return try bytes.read(&context.offset, name)
     }
     
     public var byteSize: Int {
-        MemoryLayout<Self>.size
+        self.rawValue.byteSize
     }
-}
-
-extension Int64 : ReadableElement {
     
 }
 
-extension Int32 : ReadableElement {
+extension RawRepresentable where RawValue : FixedWidthInteger & ReadableElement {
     
-}
-
-extension Int16 : ReadableElement {
+    /// Read `FixedWidthInteger`
+    public static func new(_ bytes: UnsafeRawBufferPointer, with context: inout Context, _ name: String?) throws -> Self? {
+        
+        return try bytes.read(&context.offset, byteSwapped: context.bigEndian, name)
+    }
     
-}
-
-extension Int8 : ReadableElement {
-    
-}
-
-extension UInt64 : ReadableElement {
-    
-}
-
-extension UInt32 : ReadableElement {
-    
-}
-
-extension UInt16 : ReadableElement {
-    
-}
-
-extension UInt8 : ReadableElement {
+    public var byteSize: Int {
+        self.rawValue.byteSize
+    }
     
 }

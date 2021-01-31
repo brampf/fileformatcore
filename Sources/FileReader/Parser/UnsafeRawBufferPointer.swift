@@ -266,7 +266,7 @@ extension UnsafeRawBufferPointer {
     }
     
     /// Read `RawRepresentable`
-    public func read<Raw: RawRepresentable>(_ offset: inout Int, _ byteSwapped : Bool = false, _ name : String? = nil) throws -> Raw? where Raw.RawValue : FixedWidthInteger {
+    public func read<Raw: RawRepresentable>(_ offset: inout Int, byteSwapped : Bool = false, _ name : String? = nil) throws -> Raw? where Raw.RawValue : FixedWidthInteger {
         
         #if PARSER_TRACE
         debugOut(offset, Raw.self, name)

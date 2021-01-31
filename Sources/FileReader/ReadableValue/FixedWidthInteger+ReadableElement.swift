@@ -22,45 +22,49 @@
  
  */
 
-extension Array : ReadableElement where Element : ReadableElement {
+extension FixedWidthInteger  {
     
+    /// Read `FixedWidthInteger`
     public static func new(_ bytes: UnsafeRawBufferPointer, with context: inout Context, _ name: String?) throws -> Self? {
         
-        let upperBound = context.head?.endOffset ?? bytes.endIndex
+        //print("[\(String(describing: context.offset).padding(toLength: 8, withPad: " ", startingAt: 0))] READ \(name ?? "") : \(type(of: self))")
         
-        var ret = [Element]()
-        
-        while context.offset < upperBound {
-            if let new = try Element.new(bytes, with: &context, name) {
-                ret.append(new)
-            }
-        }
-        
-        return ret
+        return try bytes.read(&context.offset, byteSwapped: context.bigEndian, name)
     }
     
     public var byteSize: Int {
-        self.reduce(into: 0) { $0 += $1.byteSize }
+        MemoryLayout<Self>.size
     }
+}
+
+extension Int64 : ReadableValue {
     
 }
 
-extension Array where Element : ReadableElement {
+extension Int32 : ReadableValue {
     
-    public var count8 : UInt8 {
-        UInt8(count)
-    }
+}
+
+extension Int16 : ReadableValue {
     
-    public var count16 : UInt16 {
-        UInt16(count)
-    }
+}
+
+extension Int8 : ReadableValue {
     
-    public var count32 : UInt32 {
-        UInt32(count)
-    }
+}
+
+extension UInt64 : ReadableValue {
     
-    public var count64 : UInt64 {
-        UInt64(count)
-    }
+}
+
+extension UInt32 : ReadableValue {
+    
+}
+
+extension UInt16 : ReadableValue {
+    
+}
+
+extension UInt8 : ReadableValue {
     
 }

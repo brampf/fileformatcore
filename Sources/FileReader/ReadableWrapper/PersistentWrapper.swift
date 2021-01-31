@@ -31,152 +31,31 @@ public protocol BoundType {
     func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws -> Value?
 }
 
-public struct Frame<R: ReadableElement> : BoundType {
-    public typealias Value = R
-    
-    public var bound: Void
-    
-    init() {
-        
-    }
-    
-    public func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws -> Value? {
-        
-        return try Value.new(bytes, with: &context, symbol)
-    }
-}
-
-public struct Repeating<R: ReadableElement> : BoundType {
-    public  typealias  Value = [R]
-    
-    public var bound : Void
-    
-    init() {
-        
-    }
-    
-    public func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws -> Value? {
-        
-        let upperBound = context.head?.endOffset ?? bytes.endIndex
-        
-        var index = 0
-        var new : [R] = .init()
-        while context.offset < upperBound {
-            if let next = try R.new(bytes, with: &context, symbol ?? ""+"[\(index)]") {
-                new.append(next)
-            }
-            index += 1
-        }
-        return new
-    }
-}
-
-public struct Counting<Parent: ReadableElement, R: ReadableElement, F: FixedWidthInteger & ReadableElement> : BoundType {
-    public  typealias  Value = [R]
-    
-    public var bound : KeyPath<Parent,Transient<Parent,F>>
-    
-    public func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws -> Value? {
-        
-        if let parent = context.head?.readable as? Parent {
-            let id = parent[keyPath: bound].uuid
-            let count : F = context[id] ?? .zero
-            
-            var new : [R] = .init()
-            
-            for _ in 0 ..< count {
-                if let next = try R.new(bytes, with: &context, symbol) {
-                    new.append(next)
-                }
-            }
-            return new
-        } else {
-            return []
-        }
-    }
-}
-
-public struct Absolute<R: ReadableElement, F: FixedWidthInteger> : BoundType {
-    public typealias Value = [R]
-    
-    public var bound : F
-    
-    public func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws -> Value? {
-        
-        var new : [R] = .init()
-        
-        for _ in 0 ..< bound {
-            if let next = try R.new(bytes, with: &context, symbol) {
-                new.append(next)
-            }
-        }
-        return new
-    }
-    
-}
-
-public struct Unless<Parent: ReadableElement, R: ReadableElement, Criterion: Equatable> : BoundType {
-    public typealias Value = [R]
-    
-    public var bound : KeyPath<Parent,Criterion>
-    public var criterion : Criterion
-    
-    public func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws -> Value? {
-        
-        if let parent = context.head?.readable as? Parent {
-            
-            var new : [R] = .init()
-            
-            while parent[keyPath: bound] != criterion {
-                if let next = try R.new(bytes, with: &context, symbol) {
-                    new.append(next)
-                }
-            }
-            return new
-        } else {
-            return []
-        }
-    }
-}
-
-struct Until<R: ReadableElement> : BoundType {
-    typealias Value = String
-    
-    public var bound : [UInt8]
-    
-    func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws -> Value? {
-        
-        let upperBound = context.head?.endOffset ?? bytes.endIndex
-        
-        let range = bytes.firstRange(of: bound, in: context.offset..<upperBound)
-        let length = (range?.startIndex ?? bytes.endIndex) - context.offset
-        
-        return try bytes.read(&context.offset, len: length , encoding: .utf8, symbol)
-        
-    }
-}
-
-public struct EmptyFrame : ReadableAutoalignFrame {
+public struct EmptyFrame : ReadableAutoFrame {
     
     public init() {
         
+    }
+    
+    public var debugDescription: String {
+        "EMTPY"
     }
 }
 
 @propertyWrapper public class Persistent<Parent: ReadableElement, Value, Meta, Bound : BoundType> : ReadableWrapper {
     
-    var bound : Bound? = nil
+    var bound : Bound
     
     public var wrappedValue : Bound.Value
     
-    public init(wrappedValue: Bound.Value, _ bound: Bound?){
+    public init(wrappedValue: Bound.Value, _ bound: Bound){
         self.bound = bound
         self.wrappedValue = wrappedValue
     }
     
     func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws {
         
-        if let frame = bound, let new = try frame.read(symbol, from: bytes, in: &context) {
+        if let new = try bound.read(symbol, from: bytes, in: &context) {
             wrappedValue = new
         } else if let new = try Bound.Value.new(bytes, with: &context, symbol) {
             wrappedValue = new
@@ -193,16 +72,60 @@ public struct EmptyFrame : ReadableAutoalignFrame {
     
 }
 
-extension Persistent where Parent : ReadableElement, Meta: FixedWidthInteger & ReadableElement, Bound == Counting<Parent, Value, Meta> {
+extension Persistent where Parent : ReadableElement, Meta: FixedWidthInteger & ReadableElement, Bound == CounterBoundedFrame<Parent, Value, Meta> {
     
     convenience public init(wrappedValue initialValue: Bound.Value, _ path: KeyPath<Parent, Transient<Parent,Meta>>) {
-        self.init(wrappedValue: initialValue, Counting(bound: path))
+        self.init(wrappedValue: initialValue, CounterBoundedFrame(bound: path))
     }
 }
 
-extension Persistent where Parent == EmptyFrame, Value: ReadableElement, Meta == Void, Bound == Frame<Value> {
+extension Persistent where Parent == EmptyFrame, Value: ReadableElement, Meta == Void, Bound == SingleElementFrame<Value> {
     
     convenience public init(wrappedValue initialValue: Value) {
-        self.init(wrappedValue: initialValue, Frame())
+        self.init(wrappedValue: initialValue, SingleElementFrame())
     }
+}
+
+extension Persistent where Parent : ReadableElement, Meta: Equatable, Bound == CriterionBoundedFrame<Parent, Value, Meta> {
+    
+    convenience public init(wrappedValue initialValue: Bound.Value, _ path: KeyPath<Parent, Meta>, equals criterion: Meta) {
+        self.init(wrappedValue: initialValue, CriterionBoundedFrame(bound: path, criterion: criterion))
+    }
+    
+}
+
+extension Persistent where Parent: ReadableElement, Meta: Equatable, Bound == ComparisonBoundedFrame<Value, Meta>, Parent == Value {
+    
+    convenience public init(wrappedValue initialValue: Bound.Value, _ path: KeyPath<Parent, Meta>, equals criterion: Meta) {
+        self.init(wrappedValue: initialValue, ComparisonBoundedFrame(bound: path, criterion: criterion))
+    }
+    
+}
+
+extension Persistent where Parent == EmptyFrame, Meta: Equatable, Bound == ValueBoundedFrame<Value>, Meta == Value {
+    
+    convenience public init(wrappedValue initialValue: Bound.Value, equals criterion: Meta) {
+        self.init(wrappedValue: initialValue, ValueBoundedFrame(bound: criterion))
+    }
+    
+}
+
+extension Persistent where Value == String, Bound == StringFrame<Parent, Meta> {
+    
+    
+    convenience public init(wrappedValue initialValue: Bound.Value, _ path: KeyPath<Parent, Transient<Parent,Meta>>? = nil, _ type: StringFrame<Parent,Meta>.StringType = .utf8) {
+        
+        self.init(wrappedValue : initialValue, StringFrame(bound: path, type: type))
+    }
+    
+}
+
+extension Persistent where Parent == EmptyFrame, Value == String, Meta == UInt8, Bound == StringFrame<Parent, Meta> {
+    
+    
+    convenience public init(wrappedValue initialValue: Bound.Value, _ type: StringFrame<Parent,Meta>.StringType = .utf8) {
+        
+        self.init(wrappedValue : initialValue, StringFrame(type: type))
+    }
+    
 }

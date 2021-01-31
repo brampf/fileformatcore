@@ -24,30 +24,17 @@
 
 import Foundation
 
-@propertyWrapper public final class ReadableData {
+public struct SingleElementFrame<R: ReadableElement> : BoundType {
+    public typealias Value = R
     
-    public var wrappedValue : Data?
+    public var bound: Void
     
-    public init() {
-        //
-    }
-}
-
-extension ReadableData : ReadableProperty {
-    
-    public func read(_ data: UnsafeRawBufferPointer, context: inout Context, _ symbol: String?) throws {
+    init() {
         
-        if let len = context.head?.endOffset {
-            // end of box
-            wrappedValue = try data.read(&context.offset, upperBound: len, symbol)
-        } else {
-            // end of file
-            wrappedValue = try data.read(&context.offset, upperBound: data.count, symbol)
-        }
     }
     
-    public var byteSize: Int {
-        wrappedValue?.count ?? 0
+    public func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws -> Value? {
+        
+        return try Value.new(bytes, with: &context, symbol)
     }
-    
 }

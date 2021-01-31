@@ -24,37 +24,30 @@
 
 import Foundation
 
-@propertyWrapper public final class ReadableChildren<R: AnyReadable> {
+public struct ValueBoundedFrame<R: ReadableElement & Equatable> : BoundType {
+    public typealias Value = [R]
     
-    public var wrappedValue : [R] = []
-
+    public var bound : R
     
-    public init() {
-        //
-    }
-    
-    public init(wrappedValue initialValue: [R]){
-        self.wrappedValue = initialValue
-    }
-    
-    public var debugDescription: String {
-        "\(R.self)[\(wrappedValue.count)]"
-    }
-}
-
-extension ReadableChildren : ReadableProperty {
-    
-    public func read(_ data: UnsafeRawBufferPointer, context: inout Context, _ symbol: String?) throws {
+    public func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws -> Value? {
         
-        while context.offset < data.endIndex {
-            if let new = try Self.read(data, context: &context) as? R {
-                wrappedValue.append(new)
+        var new : [R] = .init()
+        
+        var condition = false
+        repeat {
+            if let next = try R.new(bytes, with: &context, symbol) {
+                new.append(next)
+                
+                condition = next != bound
+            } else {
+                // warning??
+                continue
             }
-        }
+            
+        } while context.offset < (context.head?.endOffset ?? bytes.endIndex) && condition
+        
+        return new
         
     }
     
-    public var byteSize: Int {
-        wrappedValue.byteSize
-    }
 }

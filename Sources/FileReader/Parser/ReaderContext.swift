@@ -32,6 +32,8 @@ public protocol Context {
     
     var notify: ((Output) -> Void)? {get}
     
+    var root : StackElement? {get}
+    
     var head : StackElement? { get }
     
     func push(_ node: ReadableElement, size: Int?)
@@ -113,6 +115,10 @@ open class ReaderContext<Configuration: FileConfiguration> : Context {
         } else {
             return nil
         }
+    }
+
+    public var root : StackElement? {
+        return stack.first
     }
     
     public var head : StackElement? {

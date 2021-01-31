@@ -24,7 +24,7 @@
 
 import Foundation
 
-protocol ReadableValue : ReadableElement {
+public protocol ReadableValue : ReadableElement, CustomStringConvertible {
     
     
 }

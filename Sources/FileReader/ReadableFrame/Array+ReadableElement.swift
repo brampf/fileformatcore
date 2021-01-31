@@ -22,51 +22,46 @@
  
  */
 
-
-import Foundation
-
-@propertyWrapper public final class ReadableList<F: FixedWidthInteger> : ReadableProperty {
+extension Array : ReadableElement where Element : ReadableElement {
     
-    public var length : Int? = nil
-    
-    public var wrappedValue : [F] = []
-    
-    public init() {
-        //
-    }
-    
-    public init(len: Int){
-        self.length = len
-    }
-    
-    public init(len: Int, wrappedValue: [F]){
-        self.length = len
-        self.wrappedValue = wrappedValue
-    }
-
-}
-
-extension ReadableList {
-    
-    public func read(_ data: UnsafeRawBufferPointer, context: inout Context, _ symbol: String?) throws {
+    public static func new(_ bytes: UnsafeRawBufferPointer, with context: inout Context, _ name: String?) throws -> Self? {
         
-        if let len = length {
-            // fixed length
-            wrappedValue = try data.read(&context.offset, len: len, symbol)
-            
-        } else if let end = context.head?.endOffset {
-            // end of box
-            wrappedValue = try data.read(&context.offset, upperBound: end, symbol)
-        } else {
-            // end of file
-            wrappedValue = try data.read(&context.offset, upperBound: data.count, symbol)
+        let upperBound = context.head?.endOffset ?? bytes.endIndex
+        
+        var ret = [Element]()
+        
+        
+        while context.offset < upperBound {
+            if let new = try Element.new(bytes, with: &context, name) {
+                ret.append(new)
+            }
         }
-    
+        
+        return ret
     }
     
     public var byteSize: Int {
-        MemoryLayout<F>.size * wrappedValue.count
+        self.reduce(into: 0) { $0 += $1.byteSize }
     }
     
+}
+
+extension Array where Element : ReadableElement {
+    
+    public var count8 : UInt8 {
+        UInt8(count)
+    }
+    
+    public var count16 : UInt16 {
+        UInt16(count)
+    }
+    
+    public var count32 : UInt32 {
+        UInt32(count)
+    }
+    
+    public var count64 : UInt64 {
+        UInt64(count)
+    }
     
 }

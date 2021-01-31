@@ -24,30 +24,18 @@
 
 import Foundation
 
-@propertyWrapper public final class ReadableCustom<C: CustomReadable> : ReadableProperty {
+extension Data : ReadableElement {
+    
+    public static func new(_ bytes: UnsafeRawBufferPointer, with context: inout Context, _ name: String?) throws -> Self? {
         
-    public var wrappedValue: C? = nil
-    
-    public init() {
+        let upperBound = context.head?.endOffset ?? bytes.endIndex
         
-    }
-    
-    public init(wrappedValue initialValue: C?){
-        self.wrappedValue = initialValue
-    }
-    
-}
-
-extension ReadableCustom {
-    
-    
-    public func read(_ data: UnsafeRawBufferPointer, context: inout Context, _ symbol: String?) throws {
+        return try bytes.read(&context.offset, upperBound: upperBound, byteSwapped: context.bigEndian, name)
         
-        try wrappedValue?.readManually(data, context: &context)
     }
     
     public var byteSize: Int {
-        wrappedValue?.byteSize ?? 0
+        self.count
     }
     
 }

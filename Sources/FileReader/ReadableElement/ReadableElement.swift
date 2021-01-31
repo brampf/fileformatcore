@@ -94,8 +94,7 @@ extension ReadableElement {
     }
     
     public var debugLayout : String {
-        
-        self.debugLayout(0)
+        return self.debugLayout(0)
     }
     
     public func debugLayout(_ level: Int = 0) -> String {

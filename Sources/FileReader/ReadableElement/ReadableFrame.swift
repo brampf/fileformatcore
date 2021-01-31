@@ -28,65 +28,13 @@ public protocol ReadableFrame : ReadableElement {
     
     init()
     
+    mutating func read(_ data: UnsafeRawBufferPointer, context: inout Context) throws 
+    
     /// determines the size of the frame
     static func size(_ data: UnsafeRawBufferPointer, with context: inout Context) -> Int?
     
 }
 
-extension ReadableFrame {
-    
-    public var byteSize : Int {
-        let mirror = Mirror(reflecting: self)
-        
-        return recursiveBytes(mirror)
-    }
-    
-    private func recursiveBytes(_ mirror: Mirror) -> Int {
-        
-        // memory size of this frame
-        let size = mirror.children.reduce(into: 0){ size, child in
-            if let mem = child.value as? ReadableElement {
-                size += mem.byteSize
-            }
-        }
-        
-        // traverse through class hierarchie
-        if let sup = mirror.superclassMirror {
-            return size + recursiveBytes(sup)
-        } else {
-            return size
-        }
-        
-    }
-    
-}
-
-extension ReadableFrame {
-    
-    /// method to actually fill the readable properties
-    public mutating func read(_ data: UnsafeRawBufferPointer, context: inout Context) throws {
-        
-        let mirror = Mirror(reflecting: self)
-        
-        try recursiveRead(mirror, from: data, context: &context)
-    }
-    
-    private func recursiveRead(_ mirror: Mirror, from data: UnsafeRawBufferPointer, context: inout Context) throws {
-        
-        // read super readable first
-        if let sup = mirror.superclassMirror {
-            try recursiveRead(sup, from: data, context: &context)
-        }
-        
-        // read this readable
-        try mirror.children.forEach{ child in
-            if var wrapper = child.value as? ReadableWrapper {
-                try wrapper.read(child.label, from: data, in: &context)
-            }
-        }
-    }
-    
-}
 
 extension ReadableFrame {
     
@@ -98,7 +46,7 @@ extension ReadableFrame {
         
         // see if the frame size can be determined
         let size = Self.size(bytes, with: &context)
-    
+        
         context.push(new, size: size)
         
         try new.read(bytes, context: &context)

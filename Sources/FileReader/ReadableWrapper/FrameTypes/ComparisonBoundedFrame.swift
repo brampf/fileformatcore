@@ -21,19 +21,34 @@
  SOFTWARE.
  
  */
+
 import Foundation
 
-/// Automatically sizes the bounds of the frame to that of the parent frame
-public protocol ReadableAutoalignFrame : ReadableFrame {
+public struct ComparisonBoundedFrame<R: ReadableElement, Criterion: Equatable> : BoundType {
+    public typealias Value = [R]
     
+    public var bound : KeyPath<R,Criterion>
+    public var criterion : Criterion
     
-}
-
-extension ReadableAutoalignFrame {
-    
-    public static func size(_ data: UnsafeRawBufferPointer, with context: inout Context) -> Int? {
+    public func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws -> Value? {
         
-        nil // context.head?.endOffset
+        var new : [R] = .init()
+        
+        var condition = false
+        repeat {
+            if let next = try R.new(bytes, with: &context, symbol) {
+                new.append(next)
+                
+                condition = next[keyPath: bound] != criterion
+            } else {
+                // warning??
+                continue
+            }
+            
+        } while context.offset < (context.head?.endOffset ?? bytes.endIndex) && condition
+        
+        return new
+        
     }
     
 }

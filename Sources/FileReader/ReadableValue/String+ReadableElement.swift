@@ -24,33 +24,19 @@
 
 import Foundation
 
-@propertyWrapper public final class ReadableChild<R: AnyReadable> {
+extension String : ReadableValue {
     
-    public var wrappedValue : R? = nil
-    
-    
-    public init() {
-        //
-    }
-    
-    public init(wrappedValue initialValue: R?){
-        self.wrappedValue = initialValue
-    }
-    
-    public var debugDescription: String {
-        "\(R.self)"
-    }
-}
-
-extension ReadableChild : ReadableProperty {
-    
-    public func read(_ data: UnsafeRawBufferPointer, context: inout Context, _ symbol: String?) throws {
-        if let new = try Self.read(data, context: &context) as? R {
-            wrappedValue = new
-        }
+    /// Read `FixedWidthInteger`
+    public static func new(_ bytes: UnsafeRawBufferPointer, with context: inout Context, _ name: String?) throws -> Self? {
+     
+        let length = (context.head?.endOffset ?? bytes.endIndex) - context.offset
+        
+        // print("[\(String(describing: context.offset).padding(toLength: 8, withPad: " ", startingAt: 0))] READ \(name ?? "") : \(type(of: self))")
+        
+        return try bytes.read(&context.offset, len: length, encoding: .utf8, name)
     }
     
     public var byteSize: Int {
-        wrappedValue?.byteSize ?? 0
+        self.count * MemoryLayout<Self.Element>.size
     }
 }
