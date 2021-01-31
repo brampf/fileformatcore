@@ -24,13 +24,17 @@
 
 import Foundation
 
-extension Data : ReadableElement {
+extension Data : ReadableFrame {
     
-    public static func new(_ bytes: UnsafeRawBufferPointer, with context: inout Context, _ name: String?) throws -> Self? {
+    public mutating func read(_ bytes: UnsafeRawBufferPointer, context: inout Context, _ symbol: String? = nil) throws {
         
         let upperBound = context.head?.endOffset ?? bytes.endIndex
         
-        return try bytes.read(&context.offset, upperBound: upperBound, byteSwapped: context.bigEndian, name)
+        if let new = try bytes.read(&context.offset, upperBound: upperBound, byteSwapped: context.bigEndian, symbol) {
+            self = new
+        } else {
+            self = Data()
+        }
         
     }
     

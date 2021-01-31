@@ -22,33 +22,10 @@
  
  */
 
-import Foundation
 
-public struct ComparisonBoundedFrame<R: ReadableElement, Criterion: Equatable> : BoundType {
-    public typealias Value = [R]
+extension Persistent where Parent : ReadableElement, Meta: FixedWidthInteger & ReadableElement, Bound == CounterBoundedFrame<Parent, Value, Meta> {
     
-    public var bound : KeyPath<R,Criterion>
-    public var criterion : Criterion
-    
-    public func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws -> Value? {
-        
-        var new : [R] = .init()
-        
-        var condition = false
-        repeat {
-            if let next = try R.new(bytes, with: &context, symbol) {
-                new.append(next)
-                
-                condition = next[keyPath: bound] != criterion
-            } else {
-                // warning??
-                continue
-            }
-            
-        } while context.offset < (context.head?.endOffset ?? bytes.endIndex) && condition
-        
-        return new
-        
+    convenience public init(wrappedValue initialValue: Bound.Value, _ path: KeyPath<Parent, Meta>) {
+        self.init(wrappedValue: initialValue, CounterBoundedFrame(bound: path))
     }
-    
 }

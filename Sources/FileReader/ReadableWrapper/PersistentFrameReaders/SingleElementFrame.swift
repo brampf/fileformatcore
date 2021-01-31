@@ -22,46 +22,19 @@
  
  */
 
-extension Array : ReadableElement where Element : ReadableElement {
-    
-    public static func new(_ bytes: UnsafeRawBufferPointer, with context: inout Context, _ name: String?) throws -> Self? {
-        
-        let upperBound = context.head?.endOffset ?? bytes.endIndex
-        
-        var ret = [Element]()
-        
-        
-        while context.offset < upperBound {
-            if let new = try Element.new(bytes, with: &context, name) {
-                ret.append(new)
-            }
-        }
-        
-        return ret
-    }
-    
-    public var byteSize: Int {
-        self.reduce(into: 0) { $0 += $1.byteSize }
-    }
-    
-}
+import Foundation
 
-extension Array where Element : ReadableElement {
+public struct SingleElementFrame<R: ReadableElement> : PersistentFrameReader {
+    public typealias Value = R
     
-    public var count8 : UInt8 {
-        UInt8(count)
+    public var bound: Void
+    
+    init() {
+        
     }
     
-    public var count16 : UInt16 {
-        UInt16(count)
+    public func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws -> Value? {
+
+        return try Value.readElement(bytes, with: &context, symbol)
     }
-    
-    public var count32 : UInt32 {
-        UInt32(count)
-    }
-    
-    public var count64 : UInt64 {
-        UInt64(count)
-    }
-    
 }

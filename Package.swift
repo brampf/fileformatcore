@@ -22,8 +22,11 @@ let package = Package(
         .target(
             name: "FileReader",
             dependencies: ["DataTypes"]
-            ,exclude: ["ReadableProperties"]
-            ,swiftSettings: [.define("PARSER_TRACE", .when(configuration: .debug))]
+            ,exclude: ["Obsolete"]
+            ,swiftSettings: [
+                .define("PARSER_TRACE", .when(configuration: .debug)),
+                .define("READER_STACK_TRACE", .when(configuration: .debug))
+            ]
             
         ),
         .target(

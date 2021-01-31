@@ -26,7 +26,7 @@ import Foundation
 
 @propertyWrapper public final class Pad {
     
-    public var toSize : Int = 0
+    public var toSize : Int
     
     public var wrappedValue : UInt8
     
@@ -39,7 +39,7 @@ import Foundation
 
 extension Pad : ReadableWrapper {
     
-    func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws {
+    public func read(_ bytes: UnsafeRawBufferPointer, context: inout Context, _ symbol: String?) throws {
         
         let factor : Double = Double(context.offset) / Double(toSize)
         context.offset = toSize * Int(factor.rounded(.up))
@@ -49,8 +49,8 @@ extension Pad : ReadableWrapper {
         0
     }
     
-    func debugLayout(_ level: Int = 0) -> String {
-        "Padding"
+    public func debugLayout(_ level: Int = 0) -> String {
+        "Padding to \(toSize)"
     }
     
 }

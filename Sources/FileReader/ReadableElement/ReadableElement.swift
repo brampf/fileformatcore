@@ -22,82 +22,96 @@
  
  */
 
-import Foundation
-
-
-public protocol ReadableElement : CustomDebugStringConvertible {
+/// A `Readable` element is a container for a serieos of `ReadableValue`
+public protocol ReadableElement : Readable {
     
-    static func new(_ bytes: UnsafeRawBufferPointer, with context: inout Context, _ name: String?) throws -> Self?
+    /// defaut initializer used to create new instances
+    init()
     
-    var byteSize : Int {get}
+    /// method to read property values of this `Readable` from raw data
+    mutating func read(_ bytes: UnsafeRawBufferPointer, context: inout Context, _ symbol: String?) throws
     
-    func debugLayout(_ level: Int) -> String
+    /**
+     Implementation of this function allows to provide a size for the the readable; This allows the parser to check against the resulting upper bound when reading child values
+     
+     - Parameters:
+     -  data: The `UnsafeRawBufferPointer` to read from
+     -  context : The `Context` to use for reading the data
+     
+     - Returns Size of this `Readable`in bytes or `nil` if the only upper bound is EOF
+     */
+    static func size(_ bytes: UnsafeRawBufferPointer, with context: inout Context) -> Int?
+    
 }
 
-extension Optional : ReadableElement where Wrapped : ReadableElement {
-    
-    public static func new(_ bytes: UnsafeRawBufferPointer, with context: inout Context, _ name: String?) throws -> Self? {
-        
-        if let value : Wrapped = try? Wrapped.new(bytes, with: &context, name) {
-            return value
-        } else {
-            return nil
-        }
-    }
-
-    public var byteSize: Int {
-        self?.byteSize ?? 0
-    }
-    
-    public func debugLayout(_ level: Int = 0) -> String {
-        if let me = self {
-            return me.debugLayout(level)
-        } else {
-            return String(repeating: " ", count: level)+"⎿"+" (\(Self.self)) [\(self.byteSize) bytes]"
-        }
-    }
-}
-
+//MARK:- Reader implementation
 extension ReadableElement {
     
-    var dump : [String : String] {
+    /**
+     standard reading method
+     */
+    public static func readElement(_ bytes: UnsafeRawBufferPointer, with context: inout Context, _ symbol: String? = nil) throws -> Self? {
         
-        let mirror = Mirror(reflecting: self)
-        var out = [String : String]()
+        print("[\(String(describing: context.offset).padding(toLength: 8, withPad: " ", startingAt: 0))] READ \(symbol ?? "") : \(type(of: self))")
         
-        dumpRecursive(mirror, &out)
-        
-        return out
-    }
-    
-    func dumpRecursive(_ mirror : Mirror, _ out: inout [String : String]) {
-        
-        // read super box first
-        if let sup = mirror.superclassMirror {
-            dumpRecursive(sup, &out)
+        // create new instance
+        guard var new = try Self.new(bytes, with: &context, symbol) else {
+            return nil
         }
         
-        // read this box
-        mirror.children.forEach{ child in
-            if let mem = child.value as? ReadableElement {
-                out[child.label ?? "N/A"] = String(describing: mem)
+        // see if the frame size can be determined
+        let size = Self.size(bytes, with: &context)
+        
+        // push this element onto the stack
+        context.push(new, size: size)
+        
+        // read all readable values of this element
+        try new.read(bytes, context: &context, symbol)
+        
+        // pop the stack
+        let closing = try context.pop()
+        
+        // check that we popped the correct element
+        guard closing is Self else {
+            // if not, continuing makes no sense as we don't know where we acutally are
+            throw ReaderError.internalError(ErrorStack(nil, Self.self, context.offset), "Closing the wrong Element")
+        }
+        
+        // return new freshly read element
+        return new
+        
+    }
+    
+    mutating public func read(_ bytes: UnsafeRawBufferPointer, context: inout Context, _ symbol: String? = nil) throws {
+        
+        let mirror = Mirror(reflecting: self)
+        try recursiveRead(mirror, from: bytes, context: &context)
+    }
+    
+    private func recursiveRead(_ mirror: Mirror, from bytes: UnsafeRawBufferPointer, context: inout Context) throws {
+        
+        // read super readable first
+        if let sup = mirror.superclassMirror {
+            try recursiveRead(sup, from: bytes, context: &context)
+        }
+        
+        // read this readable
+        try mirror.children.forEach{ child in
+            if var wrapper = child.value as? ReadableWrapper {
+                try wrapper.read(bytes, context: &context, child.label)
             }
         }
     }
-    
-    public var debugDescription: String {
-        var ret = "\n--- \(type(of: self)) ---------------------------- Size: \(byteSize) ---"
-        dump.forEach{ field in
-            ret += "\n\(field.key.padding(toLength: 12, withPad: " ", startingAt: 0)): \(field.value)"
-        }
-        return ret
-    }
+}
+
+//MARK:- Debug Representations
+extension ReadableElement {
     
     public var debugLayout : String {
         return self.debugLayout(0)
     }
     
-    public func debugLayout(_ level: Int = 0) -> String {
+    func debugLayout(_ level: Int = 0) -> String {
         var ret = String(repeating: " ", count: level)+"⎿"+" (\(Self.self)) [\(self.byteSize) bytes]"
         
         let mirror = Mirror(reflecting: self)
@@ -110,6 +124,5 @@ extension ReadableElement {
         }
         return ret
     }
-
 }
 

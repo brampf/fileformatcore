@@ -34,13 +34,13 @@ public protocol Context {
     
     var root : StackElement? {get}
     
-    var head : StackElement? { get }
+    var head : StackElement? { get set }
     
     func push(_ node: ReadableElement, size: Int?)
     
     func pop() throws -> ReadableElement?
-
-    subscript<V>(_ uuid: UUID) -> V? {get set}
+    
+    func seek<Root: Readable,Value>(for path: KeyPath<Root,Value>) -> Value?
 }
 
 open class ReaderContext<Configuration: FileConfiguration> : Context {
@@ -77,8 +77,6 @@ open class ReaderContext<Configuration: FileConfiguration> : Context {
     }
     
     public func pop() throws -> ReadableElement? {
-        
-        transients.removeAll()
         
         if let element = stack.popLast(){
             
@@ -122,16 +120,66 @@ open class ReaderContext<Configuration: FileConfiguration> : Context {
     }
     
     public var head : StackElement? {
-        return stack.last
+        get {
+            return stack.last
+        }
+        set {
+            stack.removeLast()
+            if let new = newValue {
+                stack.append(new)
+            }
+        }
     }
     
-    public subscript<V>(_ uuid: UUID) -> V? {
-        get{
-            transients[uuid] as? V
+    /// seeks for a specific, previously read value in the file hierachy by looking for the first match for the `Root.Type` from top to down of the reader stack
+    public func seek<Root: Readable,Value>(for path: KeyPath<Root,Value>) -> Value? {
+        
+        for idx in stride(from: stack.count-1, through: 0, by: -1) {
+            if let root = stack[idx].readable as? Root {
+                
+                // First try to find as transient
+                if let val = stack[idx].transients[path] as? Value {
+                    return val
+                } else {
+                    return root[keyPath: path]
+                }
+            }
         }
-        set{
-            transients[uuid] = newValue
-        }
+        return nil
     }
     
+    /// stored the provided value as transient
+    public func transientStore<Root: Readable,Value>(for path: KeyPath<Root,Value>) -> Value? {
+        
+        for idx in stride(from: stack.count-1, through: 0, by: -1) {
+            
+            if let root = stack[idx].readable as? Root {
+                
+                return root[keyPath: path]
+            }
+        }
+        return nil
+    }
+    
+    public subscript<Root, Value>(path: KeyPath<Root,Value>) -> Value? {
+        
+        for idx in stride(from: stack.count-1, through: 0, by: -1) {
+            
+            if stack[idx].readable is Root {
+                
+                return stack[idx].transients[path] as? Value
+            }
+        }
+        // not found
+        return nil
+    }
+    
+    
+}
+
+extension ReaderContext where Configuration == DefaultConfiguration {
+    
+    public convenience init(out: ((Output) -> Void)? = nil){
+        self.init(using: DefaultConfiguration(), out: out)
+    }
 }

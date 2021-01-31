@@ -22,19 +22,21 @@
  
  */
 
-import Foundation
-
-public struct SingleElementFrame<R: ReadableElement> : BoundType {
-    public typealias Value = R
+public struct FixedNumberFrame<R: ReadableElement, F: FixedWidthInteger> : PersistentFrameReader {
+    public typealias Value = [R]
     
-    public var bound: Void
-    
-    init() {
-        
-    }
+    public var bound : F
     
     public func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws -> Value? {
         
-        return try Value.new(bytes, with: &context, symbol)
+        var new : [R] = .init()
+        
+        for _ in 0 ..< bound {
+            if let next = try R.readElement(bytes, with: &context, symbol) {
+                new.append(next)
+            }
+        }
+        return new
     }
+    
 }

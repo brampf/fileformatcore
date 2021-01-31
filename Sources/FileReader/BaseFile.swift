@@ -28,7 +28,7 @@ import Foundation
 /**
   The root Frame of the the whole file structure, offering convenience inistializers a
  */
-public protocol BaseFile : ReadableAutoFrame {
+public protocol BaseFile : ReadableFrame {
     associatedtype Configuration : FileConfiguration
     
     init()
@@ -48,7 +48,7 @@ extension BaseFile {
         }
         
         return try data.withUnsafeBytes { ptr in
-            try new(ptr, with: &context, "\(type(of: self))")
+            try readElement(ptr, with: &context, "\(type(of: self))")
         }
         
     }

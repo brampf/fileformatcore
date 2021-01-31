@@ -24,32 +24,26 @@
 
 import Foundation
 
-@propertyWrapper public final class Skip {
+extension String : ReadableFrame {
     
-    public var bytes : Int
-    
-    public var wrappedValue : Void
-    
-    public init(bytes: Int) {
-        self.bytes = bytes
-    }
-    
-}
-
-extension Skip : ReadableWrapper {
-    
-    public func read(_ bytes: UnsafeRawBufferPointer, context: inout Context, _ symbol: String?) throws {
-        bytes.skip(self.bytes, &context.offset, symbol ?? "SKIP")
+    public mutating func read(_ bytes: UnsafeRawBufferPointer, context: inout Context, _ symbol: String? = nil) throws {
+     
+        let length = (context.head?.endOffset ?? bytes.endIndex) - context.offset
+        
+        // print("[\(String(describing: context.offset).padding(toLength: 8, withPad: " ", startingAt: 0))] READ \(name ?? "") : \(type(of: self))")
+        
+        if let new = try bytes.read(&context.offset, len: length, encoding: .utf8, symbol) {
+            self = new
+        } else {
+            self = ""
+        }
     }
     
     public var byteSize: Int {
-        bytes
+        self.count * MemoryLayout<Self.Element>.size
     }
     
-    
-    public func debugLayout(_ level: Int = 0) -> String {
-        "SKIP \(bytes)"
+    public var debugLayout: String {
+        return "String[\(byteSize)] : »\(self)«"
     }
-    
-    
 }

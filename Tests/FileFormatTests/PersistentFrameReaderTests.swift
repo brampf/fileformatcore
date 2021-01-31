@@ -1,8 +1,13 @@
 import XCTest
 @testable import FileReader
 
-final class FrameBoundTests: XCTestCase {
+/// Test of the various `
+final class PersistentFrameReaderTests: XCTestCase {
 
+    static var allTests = [
+        ("testSequentialFrame", testSequentialFrame),
+    ]
+    
     struct TestConfig : FileConfiguration {
         
         var bigEndian: Bool = true
@@ -37,5 +42,4 @@ final class FrameBoundTests: XCTestCase {
         
         
     }
-    
 }

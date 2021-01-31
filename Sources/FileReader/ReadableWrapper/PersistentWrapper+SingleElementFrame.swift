@@ -22,29 +22,12 @@
  
  */
 
-import Foundation
-
-public struct CounterBoundedFrame<Parent: ReadableElement, R: ReadableElement, F: FixedWidthInteger & ReadableElement> : BoundType {
-    public  typealias  Value = [R]
+extension Persistent where Parent == EmptyFrame, Value: ReadableElement, Meta == Void, Bound == SingleElementFrame<Value> {
     
-    public var bound : KeyPath<Parent,Transient<Parent,F>>
-    
-    public func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws -> Value? {
-        
-        if let parent = context.head?.readable as? Parent {
-            let id = parent[keyPath: bound].uuid
-            let count : F = context[id] ?? .zero
-            
-            var new : [R] = .init()
-            
-            for _ in 0 ..< count {
-                if let next = try R.new(bytes, with: &context, symbol) {
-                    new.append(next)
-                }
-            }
-            return new
-        } else {
-            return []
-        }
+    convenience public init(wrappedValue initialValue: Value) {
+        self.init(wrappedValue: initialValue, SingleElementFrame())
     }
 }
+
+
+

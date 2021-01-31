@@ -22,34 +22,20 @@
  
  */
 
-import Foundation
-
-@propertyWrapper public final class Skip {
+extension RawRepresentable where RawValue : ReadableElement {
     
-    public var bytes : Int
-    
-    public var wrappedValue : Void
-    
-    public init(bytes: Int) {
-        self.bytes = bytes
-    }
-    
-}
-
-extension Skip : ReadableWrapper {
-    
-    public func read(_ bytes: UnsafeRawBufferPointer, context: inout Context, _ symbol: String?) throws {
-        bytes.skip(self.bytes, &context.offset, symbol ?? "SKIP")
+    /// Read `FixedWidthInteger`
+    public static func new(_ bytes: UnsafeRawBufferPointer, with context: inout Context, _ symbol: String? = nil) throws -> Self? {
+        
+        if let new = try RawValue.readElement(bytes, with: &context, symbol) {
+            return Self.init(rawValue: new)
+        } else {
+            return nil
+        }
     }
     
     public var byteSize: Int {
-        bytes
+        self.rawValue.byteSize
     }
-    
-    
-    public func debugLayout(_ level: Int = 0) -> String {
-        "SKIP \(bytes)"
-    }
-    
     
 }

@@ -24,16 +24,24 @@
 
 import Foundation
 
-public struct StackElement {
+public protocol ReaderStackElement {
+    
+    
+}
+
+public final class StackElement {
     
     public let readable : ReadableElement
     public let startOffset : Int
     public let endOffset : Int?
+    public var transients : [AnyKeyPath: Any] = [:]
     
     init(_ readable: ReadableElement, _ start: Int, _ end: Int?) {
         self.readable = readable
         self.startOffset = start
         self.endOffset = end
     }
-    
 }
+
+
+

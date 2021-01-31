@@ -39,17 +39,22 @@ import Foundation
 }
 
 extension Transient : ReadableWrapper {
-    
-    func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws {
+
+    public func read(_ bytes: UnsafeRawBufferPointer, context: inout Context, _ symbol: String? = nil) throws {
         
-        if let value : Value = try Value.new(bytes, with: &context, symbol){
+        if let value : Value = try Value.readElement(bytes, with: &context, symbol){
+            
             // store in context to access later
-            context[uuid] = value
+            context.head?.transients[bound] = value
         }
         
     }
     
-    func debugLayout(_ level: Int = 0) -> String {
+    public var byteSize: Int {
+        return wrappedValue.byteSize
+    }
+    
+    public func debugLayout(_ level: Int = 0) -> String {
         wrappedValue.debugLayout(level+1)
     }
     

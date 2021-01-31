@@ -1,0 +1,16 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "UInt4",
+        "repositoryURL": "https://github.com/brampf/UInt4.git",
+        "state": {
+          "branch": null,
+          "revision": "63f1978a096f3a5823c40cd5cceb44e0ba16ce0a",
+          "version": "1.0.0"
+        }
+      }
+    ]
+  },
+  "version": 1
+}

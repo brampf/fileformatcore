@@ -22,21 +22,42 @@
  
  */
 
-public struct FixedNumberFrame<R: ReadableElement, F: FixedWidthInteger> : BoundType {
-    public typealias Value = [R]
+
+extension Optional : Readable, ReadableElement where Wrapped : ReadableElement {
     
-    public var bound : F
-    
-    public func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws -> Value? {
-        
-        var new : [R] = .init()
-        
-        for _ in 0 ..< bound {
-            if let next = try R.new(bytes, with: &context, symbol) {
-                new.append(next)
-            }
-        }
-        return new
+    public static func new(_ bytes: UnsafeRawBufferPointer, with context: inout Context, _ symbol: String?) throws -> Optional<Wrapped>? {
+ 
+        // instantaniously try to read the wrapped element
+        return try Wrapped.new(bytes, with: &context, symbol)
     }
     
+    public mutating func read(_ bytes: UnsafeRawBufferPointer, context: inout Context, _ symbol: String?) throws {
+        
+        if var me = self {
+            try me.read(bytes, context: &context, symbol)
+            // assign back as 'me' is not a reference but a copy
+            self = me
+        } else {
+            // uninitialized Optional
+            self = nil
+        }
+        
+    }
+    
+    public var byteSize: Int {
+        if let me = self {
+            return me.byteSize
+        } else {
+            return 0
+        }
+    }
+    
+    public init() {
+        self = nil
+    }
+    
+    public static func size(_ bytes: UnsafeRawBufferPointer, with context: inout Context) -> Int? {
+        return Wrapped.size(bytes, with: &context)
+    }
+
 }

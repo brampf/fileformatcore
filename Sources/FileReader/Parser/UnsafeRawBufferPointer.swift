@@ -1,27 +1,4 @@
 
-/*
- 
- Copyright (c) <2020>
- 
- Permission is hereby granted, free of charge, to any person obtaining a copy
- of this software and associated documentation files (the "Software"), to deal
- in the Software without restriction, including without limitation the rights
- to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- copies of the Software, and to permit persons to whom the Software is
- furnished to do so, subject to the following conditions:
- 
- The above copyright notice and this permission notice shall be included in all
- copies or substantial portions of the Software.
- 
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- SOFTWARE.
- 
- */
 
 import Foundation
 import UInt4
@@ -187,16 +164,15 @@ extension UnsafeRawBufferPointer {
             throw ReaderError.invalidMemoryAddress(ErrorStack(name, [F].self, offset), upperBound)
         }
         
-        /// access the memory
-        guard var val = self.baseAddress?.advanced(by: offset).assumingMemoryBound(to: F.self) else {
-            print("NOGO \(F.self)")
-            throw ReaderError.incompatibleDataFormat(ErrorStack(name, [F].self, offset))
-        }
-        
         var result = [F]()
-        for _ in 0..<len {
-            result.append(byteSwapped ? val.pointee.byteSwapped : val.pointee)
-            val = val.predecessor()
+        for idx in 0..<len {
+            let position = offset + idx * MemoryLayout<F>.size
+            if let val = self.baseAddress?.load(fromByteOffset: position  , as: F.self) {
+                result.append(byteSwapped ? val.byteSwapped : val)
+            } else {
+                /// - ToDo: Better throw error?
+                result.append(.zero)
+            }
         }
         
         // move the pointer beyond the null but not beyond the bounds

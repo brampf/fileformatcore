@@ -22,16 +22,7 @@
  
  */
 
-public protocol BoundType {
-    associatedtype Value : ReadableElement
-    associatedtype Bound
-    
-    var bound : Bound {get}
-    
-    func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws -> Value?
-}
-
-public struct EmptyFrame : ReadableAutoFrame {
+public struct EmptyFrame : ReadableFrame {
     
     public init() {
         
@@ -42,7 +33,7 @@ public struct EmptyFrame : ReadableAutoFrame {
     }
 }
 
-@propertyWrapper public class Persistent<Parent: ReadableElement, Value, Meta, Bound : BoundType> : ReadableWrapper {
+@propertyWrapper public class Persistent<Parent: ReadableElement, Value, Meta, Bound : PersistentFrameReader> {
     
     var bound : Bound
     
@@ -53,79 +44,24 @@ public struct EmptyFrame : ReadableAutoFrame {
         self.wrappedValue = wrappedValue
     }
     
-    func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws {
+}
+
+extension Persistent : ReadableWrapper {
+    
+    public func read(_ bytes: UnsafeRawBufferPointer, context: inout Context, _ symbol: String? = nil) throws {
         
         if let new = try bound.read(symbol, from: bytes, in: &context) {
             wrappedValue = new
-        } else if let new = try Bound.Value.new(bytes, with: &context, symbol) {
-            wrappedValue = new
-        } else {
-            // Errro Handling?
         }
-        
     }
     
-    func debugLayout(_ level: Int) -> String {
+    public var byteSize: Int {
+        return wrappedValue.byteSize
+    }
+    
+    public func debugLayout(_ level: Int) -> String {
         
         return wrappedValue.debugLayout(level+1)
     }
-    
 }
 
-extension Persistent where Parent : ReadableElement, Meta: FixedWidthInteger & ReadableElement, Bound == CounterBoundedFrame<Parent, Value, Meta> {
-    
-    convenience public init(wrappedValue initialValue: Bound.Value, _ path: KeyPath<Parent, Transient<Parent,Meta>>) {
-        self.init(wrappedValue: initialValue, CounterBoundedFrame(bound: path))
-    }
-}
-
-extension Persistent where Parent == EmptyFrame, Value: ReadableElement, Meta == Void, Bound == SingleElementFrame<Value> {
-    
-    convenience public init(wrappedValue initialValue: Value) {
-        self.init(wrappedValue: initialValue, SingleElementFrame())
-    }
-}
-
-extension Persistent where Parent : ReadableElement, Meta: Equatable, Bound == CriterionBoundedFrame<Parent, Value, Meta> {
-    
-    convenience public init(wrappedValue initialValue: Bound.Value, _ path: KeyPath<Parent, Meta>, equals criterion: Meta) {
-        self.init(wrappedValue: initialValue, CriterionBoundedFrame(bound: path, criterion: criterion))
-    }
-    
-}
-
-extension Persistent where Parent: ReadableElement, Meta: Equatable, Bound == ComparisonBoundedFrame<Value, Meta>, Parent == Value {
-    
-    convenience public init(wrappedValue initialValue: Bound.Value, _ path: KeyPath<Parent, Meta>, equals criterion: Meta) {
-        self.init(wrappedValue: initialValue, ComparisonBoundedFrame(bound: path, criterion: criterion))
-    }
-    
-}
-
-extension Persistent where Parent == EmptyFrame, Meta: Equatable, Bound == ValueBoundedFrame<Value>, Meta == Value {
-    
-    convenience public init(wrappedValue initialValue: Bound.Value, equals criterion: Meta) {
-        self.init(wrappedValue: initialValue, ValueBoundedFrame(bound: criterion))
-    }
-    
-}
-
-extension Persistent where Value == String, Bound == StringFrame<Parent, Meta> {
-    
-    
-    convenience public init(wrappedValue initialValue: Bound.Value, _ path: KeyPath<Parent, Transient<Parent,Meta>>? = nil, _ type: StringFrame<Parent,Meta>.StringType = .utf8) {
-        
-        self.init(wrappedValue : initialValue, StringFrame(bound: path, type: type))
-    }
-    
-}
-
-extension Persistent where Parent == EmptyFrame, Value == String, Meta == UInt8, Bound == StringFrame<Parent, Meta> {
-    
-    
-    convenience public init(wrappedValue initialValue: Bound.Value, _ type: StringFrame<Parent,Meta>.StringType = .utf8) {
-        
-        self.init(wrappedValue : initialValue, StringFrame(type: type))
-    }
-    
-}

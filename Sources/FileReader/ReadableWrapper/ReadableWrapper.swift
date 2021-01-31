@@ -22,9 +22,23 @@
  
  */
 
-protocol ReadableWrapper {
-
-    mutating func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws
+/// A `PropertyWrapper` for `ReadableValues` providing the ability to parametrizise the reading or that property
+public protocol ReadableWrapper {
+    
+    /// method to read property values of this `Readable` from raw data
+    mutating func read(_ bytes: UnsafeRawBufferPointer, context: inout Context, _ symbol: String?) throws
+    
+    /// size of this readable in bytes
+    var byteSize : Int { get }
     
     func debugLayout(_ level: Int) -> String
+}
+
+//MARK:- Default Implementations
+extension ReadableWrapper {
+
+    public var debugLayout: String {
+        return debugLayout(0)
+    }
+    
 }

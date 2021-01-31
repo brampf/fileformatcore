@@ -22,34 +22,10 @@
  
  */
 
-import Foundation
-
-@propertyWrapper public final class Skip {
+extension Persistent where Parent == EmptyFrame, Meta: Equatable, Bound == ValueBoundedFrame<Value>, Meta == Value {
     
-    public var bytes : Int
-    
-    public var wrappedValue : Void
-    
-    public init(bytes: Int) {
-        self.bytes = bytes
+    convenience public init(wrappedValue initialValue: Bound.Value, equals criterion: Meta) {
+        self.init(wrappedValue: initialValue, ValueBoundedFrame(bound: criterion))
     }
-    
-}
-
-extension Skip : ReadableWrapper {
-    
-    public func read(_ bytes: UnsafeRawBufferPointer, context: inout Context, _ symbol: String?) throws {
-        bytes.skip(self.bytes, &context.offset, symbol ?? "SKIP")
-    }
-    
-    public var byteSize: Int {
-        bytes
-    }
-    
-    
-    public func debugLayout(_ level: Int = 0) -> String {
-        "SKIP \(bytes)"
-    }
-    
     
 }

@@ -22,49 +22,30 @@
  
  */
 
-extension FixedWidthInteger  {
+/**
+ A `PersistentFrameReader` to read arrays up to a specific length based on the value of a previously read property
+
+*/
+public struct CounterBoundedFrame<Parent: ReadableElement, R: ReadableElement, F: FixedWidthInteger & ReadableElement> : PersistentFrameReader {
+    public  typealias  Value = [R]
     
-    /// Read `FixedWidthInteger`
-    public static func new(_ bytes: UnsafeRawBufferPointer, with context: inout Context, _ name: String?) throws -> Self? {
+    public var bound : KeyPath<Parent,F>
+    
+    public func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws -> Value? {
         
-        //print("[\(String(describing: context.offset).padding(toLength: 8, withPad: " ", startingAt: 0))] READ \(name ?? "") : \(type(of: self))")
+        guard let count = context.seek(for: bound) else {
+            // no idea what to do, syntax is definitely not right
+            throw ReaderError.internalError(ErrorStack(#function, Value.self, context.offset), "Counting index not found")
+        }
         
-        return try bytes.read(&context.offset, byteSwapped: context.bigEndian, name)
+        var new : [R] = .init()
+        
+        for _ in 0 ..< count {
+            if let next = try R.readElement(bytes, with: &context, symbol) {
+                new.append(next)
+            }
+        }
+        return new
     }
-    
-    public var byteSize: Int {
-        MemoryLayout<Self>.size
-    }
 }
 
-extension Int64 : ReadableValue {
-    
-}
-
-extension Int32 : ReadableValue {
-    
-}
-
-extension Int16 : ReadableValue {
-    
-}
-
-extension Int8 : ReadableValue {
-    
-}
-
-extension UInt64 : ReadableValue {
-    
-}
-
-extension UInt32 : ReadableValue {
-    
-}
-
-extension UInt16 : ReadableValue {
-    
-}
-
-extension UInt8 : ReadableValue {
-    
-}

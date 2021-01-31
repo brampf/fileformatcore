@@ -22,34 +22,14 @@
  
  */
 
-import Foundation
-
-@propertyWrapper public final class Skip {
+public protocol Readable {
     
-    public var bytes : Int
+    /// factory method to create new instances
+    static func new(_ bytes: UnsafeRawBufferPointer, with context: inout Context, _ symbol: String?) throws -> Self?
     
-    public var wrappedValue : Void
+    /// size of this readable in bytes
+    var byteSize : Int { get }
     
-    public init(bytes: Int) {
-        self.bytes = bytes
-    }
-    
-}
-
-extension Skip : ReadableWrapper {
-    
-    public func read(_ bytes: UnsafeRawBufferPointer, context: inout Context, _ symbol: String?) throws {
-        bytes.skip(self.bytes, &context.offset, symbol ?? "SKIP")
-    }
-    
-    public var byteSize: Int {
-        bytes
-    }
-    
-    
-    public func debugLayout(_ level: Int = 0) -> String {
-        "SKIP \(bytes)"
-    }
-    
-    
+    /// returns as textual tree representation of  this `Readable` and its children
+    var debugLayout : String { get }
 }

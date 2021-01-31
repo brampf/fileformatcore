@@ -22,24 +22,17 @@
  
  */
 
-public struct CriterionBoundedFrame<Parent: BaseFile, R: ReadableElement, Criterion: Equatable> : BoundType {
-    public typealias Value = [R]
+/// A `Readable` value with known, finite memory layout
+public protocol ReadableValue : ReadableFrame {
     
-    public var bound : KeyPath<Parent,Criterion>
-    public var criterion : Criterion
+
+}
+
+extension ReadableValue {
     
-    public func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws -> Value? {
-        
-        var new : [R] = .init()
-        
-        let parent = context.root?.readable as? Parent
-        repeat {
-            if let next = try R.new(bytes, with: &context, symbol) {
-                new.append(next)
-            }
-            
-        } while context.offset < (context.head?.endOffset ?? bytes.endIndex) && parent != nil && parent![keyPath: bound] != criterion
-         
-        return new
+    func layout(_ value: String? ) -> String {
+        "[\(byteSize)".padding(toLength: 8, withPad: " ", startingAt: 0)
+        + "] \(type(of:self))".padding(toLength: 16, withPad: " ", startingAt: 0)
+        + (value ?? "")
     }
 }

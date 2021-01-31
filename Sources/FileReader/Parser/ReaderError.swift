@@ -26,6 +26,8 @@ import Foundation
 
 public enum ReaderError : LocalizedError, CustomStringConvertible {
     
+    case internalError(_ Stack: ErrorStack, _ cause: String)
+    
     case missalignedData(_ stack: ErrorStack, _ size: Int)
 
     case invalidMemoryAddress(_ stack: ErrorStack, _ upperBound: Int)
@@ -37,6 +39,9 @@ public enum ReaderError : LocalizedError, CustomStringConvertible {
     public var errorDescription: String? {
         
         switch self {
+        
+        case .internalError(let stack, let cause):
+            return "\(cause) at \(stack)"
         case .missalignedData(let stack, let size):
             return "\(stack) exceeds \(size)"
             
@@ -49,6 +54,7 @@ public enum ReaderError : LocalizedError, CustomStringConvertible {
         case .incompatibleDataFormat(let stack):
             return "\(stack) not readable"
         }
+            
     }
     
     public var description: String {
@@ -56,8 +62,11 @@ public enum ReaderError : LocalizedError, CustomStringConvertible {
         errorDescription ?? Mirror(reflecting: self).description
     }
     
-    public var stack : ErrorStack {
+    public var stack : ErrorStack? {
         switch self {
+        
+        case .internalError(let stack, _):
+            return stack
         case .missalignedData(let stack, _):
             return stack
             

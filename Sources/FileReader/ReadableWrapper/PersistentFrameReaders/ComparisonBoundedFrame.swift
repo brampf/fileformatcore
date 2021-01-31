@@ -22,34 +22,31 @@
  
  */
 
-import Foundation
-
-@propertyWrapper public final class Skip {
+public struct ComparisonBoundedFrame<R: ReadableElement, Criterion: Equatable> : PersistentFrameReader {
+    public typealias Value = [R]
     
-    public var bytes : Int
+    public var bound : KeyPath<R,Criterion>
+    public var criterion : Criterion
     
-    public var wrappedValue : Void
-    
-    public init(bytes: Int) {
-        self.bytes = bytes
+    public func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws -> Value? {
+        
+        var new : [R] = .init()
+        
+        var condition = false
+        repeat {
+            if let next = try R.readElement(bytes, with: &context, symbol) {
+                new.append(next)
+                
+                condition = next[keyPath: bound] != criterion
+            } else {
+                // warning??
+                continue
+            }
+            
+        } while context.offset < (context.head?.endOffset ?? bytes.endIndex) && condition
+        
+        return new
+        
     }
-    
-}
-
-extension Skip : ReadableWrapper {
-    
-    public func read(_ bytes: UnsafeRawBufferPointer, context: inout Context, _ symbol: String?) throws {
-        bytes.skip(self.bytes, &context.offset, symbol ?? "SKIP")
-    }
-    
-    public var byteSize: Int {
-        bytes
-    }
-    
-    
-    public func debugLayout(_ level: Int = 0) -> String {
-        "SKIP \(bytes)"
-    }
-    
     
 }

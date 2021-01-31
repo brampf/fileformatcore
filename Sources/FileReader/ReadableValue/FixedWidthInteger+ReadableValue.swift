@@ -22,36 +22,53 @@
  
  */
 
-import Foundation
-
-public struct StringFrame<Parent: ReadableElement, F: FixedWidthInteger & ReadableElement> : BoundType {
+extension FixedWidthInteger where Self : ReadableValue {
     
-    public typealias Value = String
-    
-    public enum StringType {
-        case utf8
-        case utf16
-        case cstring
-    }
-    
-    public var bound : KeyPath<Parent,Transient<Parent,F>>?
-    public var type : StringType
-    
-    public init(bound: KeyPath<Parent,Transient<Parent,F>>? = nil, type: StringType){
-        self.bound = bound
-        self.type = type
-    }
-    
-    public func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws -> Value? {
-
-        switch type {
-        case .cstring:
-            return try bytes.read(&context.offset, upperBound: context.head?.endOffset ?? bytes.count, symbol)
-
-        default:
-            return try bytes.read(&context.offset, len: context.head?.endOffset ?? bytes.count, symbol)
-        }
+    /// Read `FixedWidthInteger`
+    public static func new(_ bytes: UnsafeRawBufferPointer, with context: inout Context, _ symbol: String? = nil) throws -> Self? {
         
+        //print("[\(String(describing: context.offset).padding(toLength: 8, withPad: " ", startingAt: 0))] READ \(name ?? "") : \(type(of: self))")
+        
+        return try bytes.read(&context.offset, byteSwapped: context.bigEndian, symbol)
     }
+    
+    public var byteSize: Int {
+        MemoryLayout<Self>.size
+    }
+    
+    public var debugLayout : String {
+        self.debugLayout
+    }
+}
+
+extension Int64 : ReadableValue {
+    
+}
+
+extension Int32 : ReadableValue {
+    
+}
+
+extension Int16 : ReadableValue {
+    
+}
+
+extension Int8 : ReadableValue {
+    
+}
+
+extension UInt64 : ReadableValue {
+    
+}
+
+extension UInt32 : ReadableValue {
+    
+}
+
+extension UInt16 : ReadableValue {
+    
+}
+
+extension UInt8 : ReadableValue {
     
 }

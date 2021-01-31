@@ -1,3 +1,4 @@
+
 /*
  
  Copyright (c) <2021>
@@ -22,34 +23,11 @@
  
  */
 
-import Foundation
-
-@propertyWrapper public final class Skip {
+/**
+ A reader to hook in with the `PersistentWrapper` to read the the  `ReadableElement` specified as `Value` based on custom configurations
+ */
+public protocol PersistentFrameReader {
+    associatedtype Value : ReadableElement
     
-    public var bytes : Int
-    
-    public var wrappedValue : Void
-    
-    public init(bytes: Int) {
-        self.bytes = bytes
-    }
-    
-}
-
-extension Skip : ReadableWrapper {
-    
-    public func read(_ bytes: UnsafeRawBufferPointer, context: inout Context, _ symbol: String?) throws {
-        bytes.skip(self.bytes, &context.offset, symbol ?? "SKIP")
-    }
-    
-    public var byteSize: Int {
-        bytes
-    }
-    
-    
-    public func debugLayout(_ level: Int = 0) -> String {
-        "SKIP \(bytes)"
-    }
-    
-    
+    func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws -> Value?
 }

@@ -31,3 +31,15 @@ public protocol FileConfiguration {
     
     var ignoreRecoverableErrors : Bool { get }
 }
+
+public struct DefaultConfiguration : FileConfiguration {
+ 
+    public init() {
+        //
+    }
+    
+    public var bigEndian: Bool = true
+    
+    public var ignoreRecoverableErrors: Bool = true
+    
+}

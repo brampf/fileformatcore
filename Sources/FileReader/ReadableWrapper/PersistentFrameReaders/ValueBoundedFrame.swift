@@ -24,7 +24,7 @@
 
 import Foundation
 
-public struct ValueBoundedFrame<R: ReadableElement & Equatable> : BoundType {
+public struct ValueBoundedFrame<R: ReadableElement & Equatable> : PersistentFrameReader {
     public typealias Value = [R]
     
     public var bound : R

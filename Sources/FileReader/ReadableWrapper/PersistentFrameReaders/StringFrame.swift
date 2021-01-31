@@ -22,21 +22,34 @@
  
  */
 
-import Foundation
+public struct StringFrame<Parent: ReadableElement, F: FixedWidthInteger & ReadableElement> : PersistentFrameReader {
+    
+    public typealias Value = String
+    
+    public enum StringType {
+        case utf8
+        case utf16
+        case cstring
+    }
+    
+    public var bound : KeyPath<Parent,Transient<Parent,F>>?
+    public var type : StringType
+    
+    public init(bound: KeyPath<Parent,Transient<Parent,F>>? = nil, type: StringType){
+        self.bound = bound
+        self.type = type
+    }
+    
+    public func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws -> Value? {
 
-extension String : ReadableValue {
-    
-    /// Read `FixedWidthInteger`
-    public static func new(_ bytes: UnsafeRawBufferPointer, with context: inout Context, _ name: String?) throws -> Self? {
-     
-        let length = (context.head?.endOffset ?? bytes.endIndex) - context.offset
+        switch type {
+        case .cstring:
+            return try bytes.read(&context.offset, upperBound: context.head?.endOffset ?? bytes.count, symbol)
+
+        default:
+            return try bytes.read(&context.offset, len: context.head?.endOffset ?? bytes.count, symbol)
+        }
         
-        // print("[\(String(describing: context.offset).padding(toLength: 8, withPad: " ", startingAt: 0))] READ \(name ?? "") : \(type(of: self))")
-        
-        return try bytes.read(&context.offset, len: length, encoding: .utf8, name)
     }
     
-    public var byteSize: Int {
-        self.count * MemoryLayout<Self.Element>.size
-    }
 }

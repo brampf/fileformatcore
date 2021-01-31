@@ -22,32 +22,10 @@
  
  */
 
-import Foundation
-
-extension RawRepresentable where RawValue : ReadableElement {
+extension Persistent where Parent: ReadableElement, Meta: Equatable, Bound == ComparisonBoundedFrame<Value, Meta>, Parent == Value {
     
-    /// Read `FixedWidthInteger`
-    public static func new(_ bytes: UnsafeRawBufferPointer, with context: inout Context, _ name: String?) throws -> Self? {
-        
-        return try bytes.read(&context.offset, name)
-    }
-    
-    public var byteSize: Int {
-        self.rawValue.byteSize
-    }
-    
-}
-
-extension RawRepresentable where RawValue : FixedWidthInteger & ReadableElement {
-    
-    /// Read `FixedWidthInteger`
-    public static func new(_ bytes: UnsafeRawBufferPointer, with context: inout Context, _ name: String?) throws -> Self? {
-        
-        return try bytes.read(&context.offset, byteSwapped: context.bigEndian, name)
-    }
-    
-    public var byteSize: Int {
-        self.rawValue.byteSize
+    convenience public init(wrappedValue initialValue: Bound.Value, _ path: KeyPath<Parent, Meta>, equals criterion: Meta) {
+        self.init(wrappedValue: initialValue, ComparisonBoundedFrame(bound: path, criterion: criterion))
     }
     
 }
