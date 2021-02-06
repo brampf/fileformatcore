@@ -15,7 +15,7 @@ final class PropertyWrapperTests: XCTestCase {
         
         let bytes : [UInt8] = [42]
         
-        var context : Context = ReaderContext()
+        var context = ReaderContext()
         let frame = try bytes.withUnsafeBytes{ ptr in
             try TestFrame.readElement(ptr, with: &context)
         }
@@ -40,7 +40,7 @@ final class PropertyWrapperTests: XCTestCase {
         
         let bytes : [UInt8] = [42]
         
-        var context : Context = ReaderContext()
+        var context = ReaderContext()
         let frame = try bytes.withUnsafeBytes{ ptr in
             try TestFrame.readElement(ptr, with: &context)
         }
@@ -66,7 +66,7 @@ final class PropertyWrapperTests: XCTestCase {
         
         let bytes : [UInt8] = [42,23]
         
-        var context : Context = ReaderContext()
+        var context = ReaderContext()
         let frame = try bytes.withUnsafeBytes{ ptr in
             try TestFrame.readElement(ptr, with: &context)
         }
@@ -96,7 +96,7 @@ final class PropertyWrapperTests: XCTestCase {
         
         let bytes : [UInt8] = [2,42,23,0,0,0,0,0,0]
         
-        var context : Context = ReaderContext()
+        var context = ReaderContext()
         let frame = try bytes.withUnsafeBytes{ ptr in
             try TestFrame.readElement(ptr, with: &context)
         }
@@ -119,7 +119,7 @@ final class PropertyWrapperTests: XCTestCase {
         
         let bytes : [UInt8] = [0,116,101,115,116]
         
-        var context : Context = ReaderContext()
+        var context = ReaderContext()
         let frame = try bytes.withUnsafeBytes{ ptr in
             try TestFrame.readElement(ptr, with: &context)
         }
@@ -139,7 +139,7 @@ final class PropertyWrapperTests: XCTestCase {
         
         let bytes : [UInt8] = [116,101,115,116]
         
-        var context : Context = ReaderContext()
+        var context = ReaderContext()
         let frame = try bytes.withUnsafeBytes{ ptr in
             try TestFrame.readElement(ptr, with: &context)
         }
@@ -189,7 +189,7 @@ final class PropertyWrapperTests: XCTestCase {
             
          ]
         
-        var context : Context = ReaderContext()
+        var context = ReaderContext()
         let frame = try bytes.withUnsafeBytes{ ptr in
             try TestFrame.readElement(ptr, with: &context)
         }
@@ -208,6 +208,27 @@ final class PropertyWrapperTests: XCTestCase {
         
         XCTAssertEqual(frame?.array.count, 4)
         XCTAssertEqual(frame?.array, [116,101,115,116])
+    }
+    
+    func testTransient() throws {
+        
+        struct TestFrame : ReadableFrame {
+            
+            @Transient<TestFrame,UInt8>(\TestFrame.array.count8) var counter : UInt8
+            
+            @Persistent var array : [UInt8] = []
+        }
+        
+        let bytes : [UInt8] = [10,0,1,2,3,4,5,6,7,8,9]
+
+        var context = ReaderContext()
+        let frame = try bytes.withUnsafeBytes{ ptr in
+            try TestFrame.readElement(ptr, with: &context)
+        }
+        
+        XCTAssertEqual(frame?.array, [0,1,2,3,4,5,6,7,8,9])
+        XCTAssertEqual(frame?.array.count, 10)
+        XCTAssertEqual(frame?.counter, 10)
     }
     
 }

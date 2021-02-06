@@ -34,7 +34,7 @@ struct SequentialFrame<R: ReadableElement> : PersistentFrameReader {
     public var factory : (Int, Slice<UnsafeRawBufferPointer>) throws -> R
     
     
-    func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws -> Value? {
+    func read<C: Context>(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout C) throws -> Value? {
         
         var ret : [R] = .init()
         

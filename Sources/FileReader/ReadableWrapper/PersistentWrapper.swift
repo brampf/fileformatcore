@@ -22,6 +22,8 @@
  
  */
 
+import Foundation
+
 public struct EmptyFrame : ReadableFrame {
     
     public init() {
@@ -34,6 +36,8 @@ public struct EmptyFrame : ReadableFrame {
 }
 
 @propertyWrapper public class Persistent<Parent: ReadableElement, Value, Meta, Bound : PersistentFrameReader> {
+    
+    internal var uuid : UUID = UUID()
     
     var bound : Bound
     
@@ -48,7 +52,7 @@ public struct EmptyFrame : ReadableFrame {
 
 extension Persistent : ReadableWrapper {
     
-    public func read(_ bytes: UnsafeRawBufferPointer, context: inout Context, _ symbol: String? = nil) throws {
+    public func read<C: Context>(_ bytes: UnsafeRawBufferPointer, context: inout C, _ symbol: String? = nil) throws {
         
         if let new = try bound.read(symbol, from: bytes, in: &context) {
             wrappedValue = new

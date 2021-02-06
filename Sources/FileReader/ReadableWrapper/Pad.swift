@@ -39,7 +39,7 @@ import Foundation
 
 extension Pad : ReadableWrapper {
     
-    public func read(_ bytes: UnsafeRawBufferPointer, context: inout Context, _ symbol: String?) throws {
+    public func read<C: Context>(_ bytes: UnsafeRawBufferPointer, context: inout C, _ symbol: String?) throws {
         
         let factor : Double = Double(context.offset) / Double(toSize)
         context.offset = toSize * Int(factor.rounded(.up))

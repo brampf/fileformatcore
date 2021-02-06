@@ -22,14 +22,16 @@
  
  */
 
+import Foundation
+
 /// A `Readable` element is a container for a serieos of `ReadableValue`
 public protocol ReadableElement : Readable {
     
     /// defaut initializer used to create new instances
-    init()
+    //init()
     
     /// method to read property values of this `Readable` from raw data
-    mutating func read(_ bytes: UnsafeRawBufferPointer, context: inout Context, _ symbol: String?) throws
+    mutating func read<C: Context>(_ bytes: UnsafeRawBufferPointer, context: inout C, _ symbol: String?) throws
     
     /**
      Implementation of this function allows to provide a size for the the readable; This allows the parser to check against the resulting upper bound when reading child values
@@ -40,7 +42,7 @@ public protocol ReadableElement : Readable {
      
      - Returns Size of this `Readable`in bytes or `nil` if the only upper bound is EOF
      */
-    static func size(_ bytes: UnsafeRawBufferPointer, with context: inout Context) -> Int?
+    static func size<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C) -> Int?
     
 }
 
@@ -50,7 +52,7 @@ extension ReadableElement {
     /**
      standard reading method
      */
-    public static func readElement(_ bytes: UnsafeRawBufferPointer, with context: inout Context, _ symbol: String? = nil) throws -> Self? {
+    public static func readElement<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String? = nil) throws -> Self? {
         
         print("[\(String(describing: context.offset).padding(toLength: 8, withPad: " ", startingAt: 0))] READ \(symbol ?? "") : \(type(of: self))")
         
@@ -82,13 +84,13 @@ extension ReadableElement {
         
     }
     
-    mutating public func read(_ bytes: UnsafeRawBufferPointer, context: inout Context, _ symbol: String? = nil) throws {
+    mutating public func read<C: Context>(_ bytes: UnsafeRawBufferPointer, context: inout C, _ symbol: String? = nil) throws {
         
         let mirror = Mirror(reflecting: self)
         try recursiveRead(mirror, from: bytes, context: &context)
     }
     
-    private func recursiveRead(_ mirror: Mirror, from bytes: UnsafeRawBufferPointer, context: inout Context) throws {
+    private func recursiveRead<C: Context>(_ mirror: Mirror, from bytes: UnsafeRawBufferPointer, context: inout C) throws {
         
         // read super readable first
         if let sup = mirror.superclassMirror {

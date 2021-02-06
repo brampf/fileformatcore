@@ -24,8 +24,12 @@
 
 extension FixedWidthInteger where Self : ReadableValue {
     
+    public init(){
+        self = .zero
+    }
+    
     /// Read `FixedWidthInteger`
-    public static func new(_ bytes: UnsafeRawBufferPointer, with context: inout Context, _ symbol: String? = nil) throws -> Self? {
+    public static func new<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String? = nil) throws -> Self? {
         
         //print("[\(String(describing: context.offset).padding(toLength: 8, withPad: " ", startingAt: 0))] READ \(name ?? "") : \(type(of: self))")
         

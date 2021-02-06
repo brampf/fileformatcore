@@ -26,7 +26,7 @@
 public protocol ReadableWrapper {
     
     /// method to read property values of this `Readable` from raw data
-    mutating func read(_ bytes: UnsafeRawBufferPointer, context: inout Context, _ symbol: String?) throws
+    mutating func read<C: Context>(_ bytes: UnsafeRawBufferPointer, context: inout C, _ symbol: String?) throws
     
     /// size of this readable in bytes
     var byteSize : Int { get }

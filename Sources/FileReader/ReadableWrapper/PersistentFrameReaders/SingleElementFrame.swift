@@ -33,7 +33,7 @@ public struct SingleElementFrame<R: ReadableElement> : PersistentFrameReader {
         
     }
     
-    public func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws -> Value? {
+    public func read<C: Context>(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout C) throws -> Value? {
 
         return try Value.readElement(bytes, with: &context, symbol)
     }

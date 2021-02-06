@@ -22,34 +22,9 @@
  
  */
 
-public struct StringFrame<Parent: ReadableElement, F: FixedWidthInteger & ReadableElement> : PersistentFrameReader {
+protocol PostReadValidationRule : ValidationRule {
+    associatedtype Element : ReadableElement
     
-    public typealias Value = String
-    
-    public enum StringType {
-        case utf8
-        case utf16
-        case cstring
-    }
-    
-    public var bound : KeyPath<Parent,Transient<Parent,F>>?
-    public var type : StringType
-    
-    public init(bound: KeyPath<Parent,Transient<Parent,F>>? = nil, type: StringType){
-        self.bound = bound
-        self.type = type
-    }
-    
-    public func read<C: Context>(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout C) throws -> Value? {
-
-        switch type {
-        case .cstring:
-            return try bytes.read(&context.offset, upperBound: context.head?.endOffset ?? bytes.count, symbol)
-
-        default:
-            return try bytes.read(&context.offset, len: context.head?.endOffset ?? bytes.count, symbol)
-        }
-        
-    }
+    func validate(_ element : Element) -> Output
     
 }

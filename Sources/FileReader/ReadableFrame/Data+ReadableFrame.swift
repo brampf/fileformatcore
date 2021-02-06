@@ -26,7 +26,7 @@ import Foundation
 
 extension Data : ReadableFrame {
     
-    public mutating func read(_ bytes: UnsafeRawBufferPointer, context: inout Context, _ symbol: String? = nil) throws {
+    public mutating func read<C: Context>(_ bytes: UnsafeRawBufferPointer, context: inout C, _ symbol: String? = nil) throws {
         
         let upperBound = context.head?.endOffset ?? bytes.endIndex
         

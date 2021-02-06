@@ -25,13 +25,17 @@
 
 extension Optional : Readable, ReadableElement where Wrapped : ReadableElement {
     
-    public static func new(_ bytes: UnsafeRawBufferPointer, with context: inout Context, _ symbol: String?) throws -> Optional<Wrapped>? {
+    public init(){
+        self = nil
+    }
+    
+    public static func new<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String?) throws -> Optional<Wrapped>? {
  
         // instantaniously try to read the wrapped element
         return try Wrapped.new(bytes, with: &context, symbol)
     }
     
-    public mutating func read(_ bytes: UnsafeRawBufferPointer, context: inout Context, _ symbol: String?) throws {
+    public mutating func read<C: Context>(_ bytes: UnsafeRawBufferPointer, context: inout C, _ symbol: String?) throws {
         
         if var me = self {
             try me.read(bytes, context: &context, symbol)
@@ -52,11 +56,7 @@ extension Optional : Readable, ReadableElement where Wrapped : ReadableElement {
         }
     }
     
-    public init() {
-        self = nil
-    }
-    
-    public static func size(_ bytes: UnsafeRawBufferPointer, with context: inout Context) -> Int? {
+    public static func size<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C) -> Int? {
         return Wrapped.size(bytes, with: &context)
     }
 

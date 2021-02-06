@@ -29,5 +29,5 @@
 public protocol PersistentFrameReader {
     associatedtype Value : ReadableElement
     
-    func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws -> Value?
+    func read<C: Context>(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout C) throws -> Value?
 }

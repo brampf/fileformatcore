@@ -25,19 +25,22 @@
 /// A `ReadableElement` with default implementation to "magically" read all properties inheriting form `ReadableValue` or `ReadableElement`
 public protocol ReadableFrame : ReadableElement {
     
+    /// defaut initializer used to create new instances
+    init()
+    
 }
 
 //MARK:- Default implementation of ReadableElement
 extension ReadableFrame {
     
     /// In Frames, the factory methos always returns a new instance of Self by calling the default initializer
-    public static func new(_ bytes: UnsafeRawBufferPointer, with context: inout Context, _ symbol: String? = nil) throws -> Self? {
+    public static func new<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String? = nil) throws -> Self? {
         
         return Self.init()
     }
     
     /// in Frames, the size in bytes is initially unbound unless this method is implemtend differentyl
-    public static func size(_ bytes: UnsafeRawBufferPointer, with context: inout Context) -> Int? {
+    public static func size<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C) -> Int? {
         nil // no size specified aka unbounded by nature
     }
     

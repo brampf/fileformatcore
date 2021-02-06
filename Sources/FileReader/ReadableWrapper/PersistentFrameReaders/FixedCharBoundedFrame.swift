@@ -22,34 +22,35 @@
  
  */
 
-public struct StringFrame<Parent: ReadableElement, F: FixedWidthInteger & ReadableElement> : PersistentFrameReader {
-    
+import Foundation
+
+public struct FixedCharBoundedFrame<F: UnsignedInteger & FixedWidthInteger & ReadableElement> : PersistentFrameReader {
     public typealias Value = String
     
-    public enum StringType {
-        case utf8
-        case utf16
-        case cstring
-    }
-    
-    public var bound : KeyPath<Parent,Transient<Parent,F>>?
-    public var type : StringType
-    
-    public init(bound: KeyPath<Parent,Transient<Parent,F>>? = nil, type: StringType){
-        self.bound = bound
-        self.type = type
-    }
-    
-    public func read<C: Context>(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout C) throws -> Value? {
+    public var bound : F = .zero
+    public var encoding : String.Encoding = .utf8
 
-        switch type {
-        case .cstring:
-            return try bytes.read(&context.offset, upperBound: context.head?.endOffset ?? bytes.count, symbol)
-
-        default:
-            return try bytes.read(&context.offset, len: context.head?.endOffset ?? bytes.count, symbol)
-        }
+    
+    public func read<C: Context>(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout C) throws -> String? {
         
+        let val : F = try bytes.read(&context.offset, byteSwapped: false, symbol)
+        
+        var me = [val]
+        let data = Data(bytes: &me, count: me.count * MemoryLayout<F>.size)
+        return String(data: data, encoding: encoding)
     }
     
+}
+
+extension Persistent where
+    Meta : UnsignedInteger & FixedWidthInteger & ReadableElement,
+    Value == String,
+    Parent == EmptyFrame,
+    Bound == FixedCharBoundedFrame<Meta>
+{
+    
+    convenience public init(wrappedValue initialValue: Bound.Value, _ label: Meta.Type, _ encoding: String.Encoding = .utf8) {
+        
+        self.init(wrappedValue: initialValue, FixedCharBoundedFrame<Meta>(encoding:  encoding))
+    }
 }

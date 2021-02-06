@@ -24,10 +24,11 @@
 
 extension Persistent where Parent : ReadableElement, Meta: Equatable, Bound == CriterionBoundedFrame<Parent, Value, Meta> {
     
+    /*
     convenience public init(wrappedValue initialValue: Bound.Value, _ path: KeyPath<Parent, Meta>, equals criterion: Meta) {
         self.init(wrappedValue: initialValue, CriterionBoundedFrame(bound: path, criterion: criterion))
     }
-    
+    */
 }
 
 

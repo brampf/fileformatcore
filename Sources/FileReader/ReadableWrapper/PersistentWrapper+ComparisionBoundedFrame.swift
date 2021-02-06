@@ -22,9 +22,15 @@
  
  */
 
-extension Persistent where Parent: ReadableElement, Meta: Equatable, Bound == ComparisonBoundedFrame<Value, Meta>, Parent == Value {
+extension Persistent where
+    Meta: Equatable,
+    Value == [Parent],
+    Parent : ReadableElement,
+    Bound == ComparisonBoundedFrame<Parent, Meta>
+{
     
     convenience public init(wrappedValue initialValue: Bound.Value, _ path: KeyPath<Parent, Meta>, equals criterion: Meta) {
+        
         self.init(wrappedValue: initialValue, ComparisonBoundedFrame(bound: path, criterion: criterion))
     }
     

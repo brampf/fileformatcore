@@ -49,4 +49,24 @@ final class ReaderTests: XCTestCase {
         }
         
     }
+    
+    func testReadFrame() throws {
+        
+        struct TestFrame : ReadableFrame {
+            
+            @Persistent var number : UInt8 = 0
+            
+        }
+        
+        let bytes : [UInt8] = [42]
+        
+        var context = ReaderContext()
+        let frame = try bytes.withUnsafeBytes{ ptr in
+            try TestFrame.readElement(ptr, with: &context, nil)
+        }
+        
+        XCTAssertNotNil(frame)
+        XCTAssertEqual(frame?.number, 42)
+        
+    }
 }

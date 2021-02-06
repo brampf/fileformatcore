@@ -25,7 +25,7 @@
 public protocol Readable {
     
     /// factory method to create new instances
-    static func new(_ bytes: UnsafeRawBufferPointer, with context: inout Context, _ symbol: String?) throws -> Self?
+    static func new<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String?) throws -> Self?
     
     /// size of this readable in bytes
     var byteSize : Int { get }

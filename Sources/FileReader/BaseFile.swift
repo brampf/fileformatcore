@@ -24,12 +24,11 @@
 
 import Foundation
 
-
 /**
   The root Frame of the the whole file structure, offering convenience inistializers a
  */
 public protocol BaseFile : ReadableFrame {
-    associatedtype Configuration : FileConfiguration
+    associatedtype Context : FileReader.Context
     
     init()
 }
@@ -38,14 +37,37 @@ public protocol BaseFile : ReadableFrame {
 extension BaseFile {
     
     /**
-     Reads ta `BaseFile` from the bytes provided
+     Reads a `BaseFile` from the bytes provided
+     
+     - Parameters:
+        -  data: the raw data to read from
+        -  configuration: the `FileConfiguraiton`to use
+        -  out: the output handler to use
+     
      */
-    public static func read(data: ContiguousBytes) throws -> Self? {
+    public static func read(from data: ContiguousBytes, with configuration: Context.Configuration = Context.Configuration(), out: ((Output) -> ())? = nil) throws -> Self? {
         
-        let config = Configuration()
-        var context : Context = ReaderContext(using: config) { out in
-            print(out.msg)
+        var context = Context.init(using: configuration, out: out)
+        
+        return try data.withUnsafeBytes { ptr in
+            try readElement(ptr, with: &context, "\(type(of: self))")
         }
+        
+    }
+    
+    /**
+     Reads ta `BaseFile` from the url provided
+     
+     - Parameters:
+        -  url: the file ULR to read the raw data from
+        -  configuration: the `FileConfiguraiton`to use
+        -  out: the output handler to use
+     
+     */
+    public static func read(from url: URL, with configuration: Context.Configuration = Context.Configuration(), out: ((Output) -> ())? = nil) throws -> Self? {
+        
+        let data = try Data(contentsOf: url)
+        var context = Context.init(using: configuration, out: out)
         
         return try data.withUnsafeBytes { ptr in
             try readElement(ptr, with: &context, "\(type(of: self))")

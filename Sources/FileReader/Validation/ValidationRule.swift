@@ -22,37 +22,6 @@
  
  */
 
-import Foundation
-
-public protocol ReadableFrame : ReadableElement {
+protocol ValidationRule {
     
-    init()
-    
-    mutating func read(_ data: UnsafeRawBufferPointer, context: inout Context) throws 
-    
-    /// determines the size of the frame
-    static func size(_ data: UnsafeRawBufferPointer, with context: inout Context) -> Int?
-    
-}
-
-
-extension ReadableFrame {
-    
-    public static func new(_ bytes: UnsafeRawBufferPointer, with context: inout Context, _ name: String?) throws -> Self? {
-        
-        print("[\(String(describing: context.offset).padding(toLength: 8, withPad: " ", startingAt: 0))] READ \(name ?? "") : \(type(of: self))")
-        
-        var new = Self()
-        
-        // see if the frame size can be determined
-        let size = Self.size(bytes, with: &context)
-        
-        context.push(new, size: size)
-        
-        try new.read(bytes, context: &context)
-        
-        _ = try context.pop()
-        
-        return new
-    }
 }

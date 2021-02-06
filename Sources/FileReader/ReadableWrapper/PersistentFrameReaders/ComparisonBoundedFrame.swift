@@ -22,13 +22,16 @@
  
  */
 
+/**
+ Reads child elements into an array until a child matches the comparion provided
+ */
 public struct ComparisonBoundedFrame<R: ReadableElement, Criterion: Equatable> : PersistentFrameReader {
     public typealias Value = [R]
     
     public var bound : KeyPath<R,Criterion>
     public var criterion : Criterion
     
-    public func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws -> Value? {
+    public func read<C: Context>(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout C) throws -> Value? {
         
         var new : [R] = .init()
         

@@ -38,7 +38,7 @@ import Foundation
 
 extension Skip : ReadableWrapper {
     
-    public func read(_ bytes: UnsafeRawBufferPointer, context: inout Context, _ symbol: String?) throws {
+    public func read<C: Context>(_ bytes: UnsafeRawBufferPointer, context: inout C, _ symbol: String?) throws {
         bytes.skip(self.bytes, &context.offset, symbol ?? "SKIP")
     }
     

@@ -27,7 +27,7 @@ public struct FixedNumberFrame<R: ReadableElement, F: FixedWidthInteger> : Persi
     
     public var bound : F
     
-    public func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws -> Value? {
+    public func read<C: Context>(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout C) throws -> Value? {
         
         var new : [R] = .init()
         

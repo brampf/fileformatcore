@@ -25,6 +25,7 @@
 import Foundation
 
 public protocol Context {
+    associatedtype Configuration: FileConfiguration
     
     var offset : Int { get set }
     
@@ -32,9 +33,13 @@ public protocol Context {
     
     var notify: ((Output) -> Void)? {get}
     
+    var config : Configuration { get }
+    
     var root : StackElement? {get}
     
     var head : StackElement? { get set }
+    
+    init(using configuration: Configuration, out: ((Output) -> Void)?)
     
     func push(_ node: ReadableElement, size: Int?)
     
@@ -44,8 +49,7 @@ public protocol Context {
 }
 
 open class ReaderContext<Configuration: FileConfiguration> : Context {
-    
-    var config : Configuration
+    public var config : Configuration
     
     /// Node Stack
     var stack : [StackElement] = []
@@ -61,7 +65,7 @@ open class ReaderContext<Configuration: FileConfiguration> : Context {
     
     public var notify: ((Output) -> Void)? = nil
     
-    public init(using configuration: Configuration, out: ((Output) -> Void)?){
+    public required init(using configuration: Configuration, out: ((Output) -> Void)? = nil){
         self.config = configuration
         self.notify = out
         
@@ -161,7 +165,7 @@ open class ReaderContext<Configuration: FileConfiguration> : Context {
         return nil
     }
     
-    public subscript<Root, Value>(path: KeyPath<Root,Value>) -> Value? {
+    public func lookup<Root, Value>(path: KeyPath<Root,Value>) -> Value? {
         
         for idx in stride(from: stack.count-1, through: 0, by: -1) {
             
@@ -174,12 +178,22 @@ open class ReaderContext<Configuration: FileConfiguration> : Context {
         return nil
     }
     
+    public subscript<V>(dynamicMember member: String) -> V {
+        
+        let mirror = Mirror(reflecting: config)
+        let child = mirror.children.first(where: {$0.label == member})
+        if let value = child?.value as? V {
+            return value
+        }
+        fatalError("\(type(of: Configuration.self)).\(member) not found")
+    }
+    
     
 }
 
 extension ReaderContext where Configuration == DefaultConfiguration {
     
-    public convenience init(out: ((Output) -> Void)? = nil){
+     convenience public init(out: ((Output) -> Void)? = nil){
         self.init(using: DefaultConfiguration(), out: out)
     }
 }

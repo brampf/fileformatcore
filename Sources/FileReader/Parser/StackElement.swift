@@ -22,10 +22,7 @@
  
  */
 
-import Foundation
-
 public protocol ReaderStackElement {
-    
     
 }
 

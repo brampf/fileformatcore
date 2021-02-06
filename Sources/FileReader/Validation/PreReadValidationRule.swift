@@ -21,6 +21,10 @@
  SOFTWARE.
  
  */
-import Foundation
 
-typealias CString = [CChar]
+protocol PreReadValidationRule : ValidationRule {
+    associatedtype Element : ReadableElement
+    
+    func validate(_ bytes: Slice<UnsafeRawBufferPointer>) -> Output
+    
+}

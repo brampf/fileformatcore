@@ -31,7 +31,7 @@ public struct CounterBoundedFrame<Parent: ReadableElement, R: ReadableElement, F
     
     public var bound : KeyPath<Parent,F>
     
-    public func read(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout Context) throws -> Value? {
+    public func read<C: Context>(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout C) throws -> Value? {
         
         guard let count = context.seek(for: bound) else {
             // no idea what to do, syntax is definitely not right
