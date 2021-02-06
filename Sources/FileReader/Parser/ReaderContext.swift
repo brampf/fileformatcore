@@ -24,31 +24,7 @@
 
 import Foundation
 
-public protocol Context {
-    associatedtype Configuration: FileConfiguration
-    
-    var offset : Int { get set }
-    
-    var bigEndian : Bool { get }
-    
-    var notify: ((Output) -> Void)? {get}
-    
-    var config : Configuration { get }
-    
-    var root : StackElement? {get}
-    
-    var head : StackElement? { get set }
-    
-    init(using configuration: Configuration, out: ((Output) -> Void)?)
-    
-    func push(_ node: ReadableElement, size: Int?)
-    
-    func pop() throws -> ReadableElement?
-    
-    func seek<Root: Readable,Value>(for path: KeyPath<Root,Value>) -> Value?
-}
-
-open class ReaderContext<Configuration: FileConfiguration> : Context {
+open class DefaultContext<Configuration: FileConfiguration> : Context {
     public var config : Configuration
     
     /// Node Stack
@@ -191,7 +167,7 @@ open class ReaderContext<Configuration: FileConfiguration> : Context {
     
 }
 
-extension ReaderContext where Configuration == DefaultConfiguration {
+extension DefaultContext where Configuration == DefaultConfiguration {
     
      convenience public init(out: ((Output) -> Void)? = nil){
         self.init(using: DefaultConfiguration(), out: out)

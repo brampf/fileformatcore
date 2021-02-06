@@ -27,7 +27,7 @@ final class BaseFileTests: XCTestCase {
     func testSimpleFile() {
         
         struct TestFile : BaseFile {
-            typealias Context = ReaderContext<TestConfig>
+            typealias Context = DefaultContext<TestConfig>
             
             @Persistent var version : UInt32 = 0
             
@@ -105,7 +105,7 @@ final class BaseFileTests: XCTestCase {
     func testComplexFile() {
         
         struct TestFile : BaseFile {
-            typealias Context = ReaderContext<TestConfig>
+            typealias Context = DefaultContext<TestConfig>
             
             @Persistent var number : UInt16 = 0
             
@@ -152,7 +152,7 @@ final class BaseFileTests: XCTestCase {
     func testFileWithPrimtiiveProperties() {
         
         struct TestFile : BaseFile {
-            typealias Context = ReaderContext<TestConfig>
+            typealias Context = DefaultContext<TestConfig>
             
             @Persistent(equals: 8) var array : [UInt8] = []
             
@@ -174,7 +174,7 @@ final class BaseFileTests: XCTestCase {
     func testFileWithConditionalProperties() {
         
         struct TestFile : BaseFile {
-            typealias Context = ReaderContext<TestConfig>
+            typealias Context = DefaultContext<TestConfig>
             
             @Persistent(\TestField.number, equals: 8) var array : [TestField] = []
             
@@ -202,7 +202,7 @@ final class BaseFileTests: XCTestCase {
     func testFileWithCountingProperties() {
         
         struct TestFile : BaseFile {
-            typealias Context = ReaderContext<TestConfig>
+            typealias Context = DefaultContext<TestConfig>
             
             @Persistent(\TestField.number, equals: 8) var array : [TestField] = []
             
@@ -230,7 +230,7 @@ final class BaseFileTests: XCTestCase {
     func testFileWithStringProperties() {
         
         struct TestFile : BaseFile {
-            typealias Context = ReaderContext<TestConfig>
+            typealias Context = DefaultContext<TestConfig>
             
             @Persistent(.cstring) var first = "Test"
             
@@ -285,7 +285,7 @@ final class BaseFileTests: XCTestCase {
         
         let bytes : [UInt8] = [0,0,0,32,1,2,3,4,5,6,7,8,9]
         
-        var context = ReaderContext(using: TestConfig(), out: nil
+        var context = DefaultContext(using: TestConfig(), out: nil
         )
         let frame = try bytes.withUnsafeBytes{ ptr in
             try TestElement.new(ptr, with: &context, nil)

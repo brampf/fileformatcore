@@ -28,7 +28,7 @@ final class PersistentFrameReaderTests: XCTestCase {
             return String(data: data, encoding: .utf8) ?? "ERROR"
         }
         
-        var context = ReaderContext(using: TestConfig()) { msg in
+        var context = DefaultContext(using: TestConfig()) { msg in
             print(msg)
         }
         
@@ -47,7 +47,7 @@ final class PersistentFrameReaderTests: XCTestCase {
         struct Parent : BaseFile {
             
             typealias Configuration = TestConfig
-            typealias Context = ReaderContext<Configuration>
+            typealias Context = DefaultContext<Configuration>
             
             @Persistent(\Child.data, equals: 1701733408) var children : [Child] = []
             
@@ -91,7 +91,7 @@ final class PersistentFrameReaderTests: XCTestCase {
     func testFixedCharBoundedFrame() throws {
         
         struct Frame : BaseFile {
-            typealias Context = ReaderContext<TestConfig>
+            typealias Context = DefaultContext<TestConfig>
             
             @Persistent(UInt32.self) var label = ""
             

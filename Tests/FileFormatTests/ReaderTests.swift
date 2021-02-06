@@ -60,7 +60,7 @@ final class ReaderTests: XCTestCase {
         
         let bytes : [UInt8] = [42]
         
-        var context = ReaderContext()
+        var context = DefaultContext()
         let frame = try bytes.withUnsafeBytes{ ptr in
             try TestFrame.readElement(ptr, with: &context, nil)
         }
