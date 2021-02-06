@@ -5,6 +5,9 @@ final class ReaderTests: XCTestCase {
 
     static var allTests = [
         ("testExample", testExample),
+        ("testReadString", testReadString),
+        ("testReadUInt32", testReadUInt32),
+        ("testReadFrame", testReadFrame)
     ]
     
     func testExample() {

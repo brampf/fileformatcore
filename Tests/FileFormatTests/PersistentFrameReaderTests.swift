@@ -6,6 +6,8 @@ final class PersistentFrameReaderTests: XCTestCase {
 
     static var allTests = [
         ("testSequentialFrame", testSequentialFrame),
+        ("testComparisonBoundedFrame", testComparisonBoundedFrame),
+        ("testFixedCharBoundedFrame", testFixedCharBoundedFrame)
     ]
     
     struct TestConfig : FileConfiguration {

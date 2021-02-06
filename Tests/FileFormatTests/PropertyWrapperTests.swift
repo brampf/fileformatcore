@@ -3,7 +3,16 @@ import FileReader
 
 final class PropertyWrapperTests: XCTestCase {
     
-    
+        static var allTests = [
+        ("testUInt8", testUInt8),
+        ("testSingleFrame", testSingleFrame),
+        ("testRepeatingFrame", testRepeatingFrame),
+        ("testCountedChildFrame", testCountedChildFrame),
+        ("testStringFrame", testStringFrame),
+        ("testOptionalStringFrame", testOptionalStringFrame),
+        ("testCountingLookup", testCountingLookup),
+        ("testTransient", testTransient)
+    ]
     
     func testUInt8() throws {
         

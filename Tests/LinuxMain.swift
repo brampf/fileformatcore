@@ -1,7 +1,7 @@
 import XCTest
 
-import FileParserTests
+import FileFormatTests
 
 var tests = [XCTestCaseEntry]()
-tests += FileParserTests.allTests()
+tests += FileFormatTests.allTests()
 XCTMain(tests)
