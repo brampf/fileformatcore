@@ -34,16 +34,21 @@ public struct CounterBoundedFrame<Parent: ReadableElement, R: ReadableElement, F
     public func read<C: Context>(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout C) throws -> Value? {
         
         guard let count = context.seek(for: bound) else {
+            
+            context.head?.transients.forEach{ t in
+                print("\(type(of: context.head?.readable)) : \(t.key) = \(t.value)")
+            }
+            
             // no idea what to do, syntax is definitely not right
-            throw ReaderError.internalError(ErrorStack(#function, Value.self, context.offset), "Counting index not found")
+            throw ReaderError.internalError(ErrorStack(symbol, Value.self, context.offset), "Counting index for \(type(of: Parent.self)) not found")
         }
         
         var new : [R] = .init()
         
         for _ in 0 ..< count {
-            if let next = try R.readElement(bytes, with: &context, symbol) {
+             var next = R.new()
+                try next.read(bytes, context: &context, symbol)
                 new.append(next)
-            }
         }
         return new
     }

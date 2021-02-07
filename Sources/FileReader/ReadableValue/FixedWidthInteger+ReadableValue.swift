@@ -29,11 +29,11 @@ extension FixedWidthInteger where Self : ReadableValue {
     }
     
     /// Read `FixedWidthInteger`
-    public static func new<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String? = nil) throws -> Self? {
+    public mutating func read<C: Context>(_ bytes: UnsafeRawBufferPointer, context: inout C, _ symbol: String?) throws {
         
         //print("[\(String(describing: context.offset).padding(toLength: 8, withPad: " ", startingAt: 0))] READ \(name ?? "") : \(type(of: self))")
         
-        return try bytes.read(&context.offset, byteSwapped: context.bigEndian, symbol)
+        self = try bytes.read(&context.offset, byteSwapped: context.bigEndian, symbol)
     }
     
     public var byteSize: Int {

@@ -22,7 +22,7 @@
  
  */
 
-/// A `ReadableElement` with default implementation to "magically" read all properties inheriting form `ReadableValue` or `ReadableElement`
+/// A `ReadableElement` with a default implementation to read all properties wrapped as `ReadableWrapper` and
 public protocol ReadableFrame : ReadableElement {
     
     /// defaut initializer used to create new instances
@@ -33,15 +33,16 @@ public protocol ReadableFrame : ReadableElement {
 //MARK:- Default implementation of ReadableElement
 extension ReadableFrame {
     
-    /// In Frames, the factory methos always returns a new instance of Self by calling the default initializer
-    public static func new<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String? = nil) throws -> Self? {
-        
+    /// in frames
+    public static func new() -> Self {
         return Self.init()
     }
     
+    /// In Frames, the factory methos always returns a new instance of Self by calling the default initializer
     /// in Frames, the size in bytes is initially unbound unless this method is implemtend differentyl
-    public static func size<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C) -> Int? {
-        nil // no size specified aka unbounded by nature
+    public static func next<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: C, _ symbol: String?) throws -> (element: ReadableElement.Type?, size: Int?) {
+        
+        return (Self.self, nil)
     }
     
     /// In Frames, the size in bytes is the sum of the the children stored in `ReadableWrappers`
@@ -67,6 +68,31 @@ extension ReadableFrame {
             return size
         }
         
+    }
+    
+}
+
+extension ReadableFrame {
+    
+    public  mutating func read<C: Context>(_ bytes: UnsafeRawBufferPointer, context: inout C, _ symbol: String?) throws {
+        
+        let mirror = Mirror(reflecting: self)
+        try recursiveRead(mirror, from: bytes, context: &context)
+    }
+    
+    private func recursiveRead<C: Context>(_ mirror: Mirror, from bytes: UnsafeRawBufferPointer, context: inout C) throws {
+        
+        // read super readable first
+        if let sup = mirror.superclassMirror {
+            try recursiveRead(sup, from: bytes, context: &context)
+        }
+        
+        // read this readable
+        try mirror.children.forEach{ child in
+            if var wrapper = child.value as? ReadableWrapper {
+                try wrapper.read(bytes, context: &context, child.label)
+            }
+        }
     }
     
 }

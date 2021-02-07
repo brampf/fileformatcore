@@ -22,22 +22,11 @@
  
  */
 
-extension Array : Readable, ReadableElement, ReadableFrame where Element : ReadableElement {
+extension Array : Readable where Element : Readable {
     
-    public mutating func read<C: Context>(_ bytes: UnsafeRawBufferPointer, context: inout C, _ symbol: String? = nil) throws {
+    public static func next<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: C, _ symbol: String?) throws -> (element: ReadableElement.Type?, size: Int?) {
         
-        let upperBound = context.head?.endOffset ?? bytes.endIndex
-        
-        var new = [Element]()
-        
-        
-        while context.offset < upperBound {
-            if let next = try Element.readElement(bytes, with: &context, symbol) {
-                new.append(next)
-            }
-        }
-        
-        self = new
+        return (Self.self, nil)
     }
     
     public var byteSize: Int {
@@ -46,7 +35,32 @@ extension Array : Readable, ReadableElement, ReadableFrame where Element : Reada
     
 }
 
-extension Array where Element : ReadableElement {
+
+
+extension Array : ReadableElement where Element : Readable {
+    
+    public static func new() -> Self {
+        return .init()
+    }
+    
+    public mutating func read<C: Context>(_ bytes: UnsafeRawBufferPointer, context: inout C, _ symbol: String? = nil) throws {
+        
+        let upperBound = context.head?.endOffset ?? bytes.endIndex
+         
+        var new = [Element]()
+        
+        while context.offset < upperBound {
+            if let next = try Element.readNext(bytes, with: &context, symbol) as? Element {
+                new.append(next)
+            }
+        }
+        
+        self = new
+    }
+    
+}
+
+extension Array {
     
     public var count8 : UInt8 {
         UInt8(count)

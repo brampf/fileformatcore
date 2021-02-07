@@ -50,7 +50,7 @@ extension BaseFile {
         var context = Context.init(using: configuration, out: out)
         
         return try data.withUnsafeBytes { ptr in
-            try readElement(ptr, with: &context, "\(type(of: self))")
+            try readNext(ptr, with: &context, "\(type(of: self))") as? Self
         }
         
     }
@@ -70,7 +70,7 @@ extension BaseFile {
         var context = Context.init(using: configuration, out: out)
         
         return try data.withUnsafeBytes { ptr in
-            try readElement(ptr, with: &context, "\(type(of: self))")
+            try readNext(ptr, with: &context, "\(type(of: self))") as? Self
         }
         
     }

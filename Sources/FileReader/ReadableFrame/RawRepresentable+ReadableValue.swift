@@ -24,12 +24,12 @@
 
 extension RawRepresentable where RawValue : ReadableValue {
     
-    public static func new<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String? = nil) throws -> Self? {
+    public mutating func read<C: Context>(_ bytes: UnsafeRawBufferPointer, context: inout C, _ symbol: String?) throws {
         
-        if let new = try RawValue.new(bytes, with: &context, symbol) {
-            return Self.init(rawValue: new)
-        } else {
-            return nil
+        var new = RawValue.new()
+        try new.read(bytes, context: &context, symbol)
+        if let raw = Self.init(rawValue: new) {
+            self = raw
         }
     }
     

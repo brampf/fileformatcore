@@ -56,12 +56,12 @@ extension Transient : ReadableWrapper {
 
     public func read<C: Context>(_ bytes: UnsafeRawBufferPointer, context: inout C, _ symbol: String? = nil) throws {
         
-        if let value : Value = try Value.readElement(bytes, with: &context, symbol){
+        var value : Value = Value.new()
             
-            // store in context to access later
-            context.head?.transients[bound] = value
-        }
-        
+        try value.read(bytes, context: &context, symbol)
+            
+        // store in context to access later
+        context.head?.transients[bound] = value
     }
     
     public var byteSize: Int {

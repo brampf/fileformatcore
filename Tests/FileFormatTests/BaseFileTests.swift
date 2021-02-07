@@ -250,9 +250,25 @@ final class BaseFileTests: XCTestCase {
     
     
     
+    
     func testCustomElement() throws {
         
         struct TestElement : ReadableElement {
+            
+            static func new() -> TestElement {
+                TestElement()
+            }
+            
+            static func next<C>(_ bytes: UnsafeRawBufferPointer, with context: C, _ symbol: String?) throws -> (element: ReadableElement.Type?, size: Int?) where C : Context {
+                (TestElement.self, nil)
+            }
+            
+            mutating func read<C>(_ bytes: UnsafeRawBufferPointer, context: inout C, _ symbol: String?) throws where C : Context {
+            
+                self.number = try bytes.read(&context.offset, byteSwapped: context.bigEndian)
+                
+                self.array = try bytes.read(&context.offset, upperBound: context.head?.endOffset ?? bytes.endIndex, byteSwapped: context.bigEndian)
+            }
             
             var number : UInt32 = 0
             var array : [UInt8] = []
@@ -261,16 +277,6 @@ final class BaseFileTests: XCTestCase {
                 // default initializer
             }
             
-            static func new<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String?) throws -> TestElement? {
-                
-                var new = TestElement()
-                
-                new.number = try bytes.read(&context.offset, byteSwapped: context.bigEndian)
-                
-                new.array = try bytes.read(&context.offset, upperBound: context.head?.endOffset ?? bytes.endIndex, byteSwapped: context.bigEndian)
-                
-                return new
-            }
             
             var byteSize: Int {
                 return 4 + array.byteSize
@@ -288,7 +294,7 @@ final class BaseFileTests: XCTestCase {
         var context = DefaultContext(using: TestConfig(), out: nil
         )
         let frame = try bytes.withUnsafeBytes{ ptr in
-            try TestElement.new(ptr, with: &context, nil)
+            try TestElement.readNext(ptr, with: &context, nil) as? TestElement
         }
         
         XCTAssertEqual(frame?.number, 32)

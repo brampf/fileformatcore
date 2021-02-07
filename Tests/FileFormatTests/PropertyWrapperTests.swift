@@ -26,7 +26,7 @@ final class PropertyWrapperTests: XCTestCase {
         
         var context = DefaultContext()
         let frame = try bytes.withUnsafeBytes{ ptr in
-            try TestFrame.readElement(ptr, with: &context)
+            try TestFrame.readNext(ptr, with: &context) as? TestFrame
         }
        
         XCTAssertNotNil(frame)
@@ -51,7 +51,7 @@ final class PropertyWrapperTests: XCTestCase {
         
         var context = DefaultContext()
         let frame = try bytes.withUnsafeBytes{ ptr in
-            try TestFrame.readElement(ptr, with: &context)
+            try TestFrame.readNext(ptr, with: &context) as? TestFrame
         }
         
         XCTAssertNotNil(frame)
@@ -77,7 +77,7 @@ final class PropertyWrapperTests: XCTestCase {
         
         var context = DefaultContext()
         let frame = try bytes.withUnsafeBytes{ ptr in
-            try TestFrame.readElement(ptr, with: &context)
+            try TestFrame.readNext(ptr, with: &context) as? TestFrame
         }
         
         XCTAssertNotNil(frame)
@@ -107,7 +107,7 @@ final class PropertyWrapperTests: XCTestCase {
         
         var context = DefaultContext()
         let frame = try bytes.withUnsafeBytes{ ptr in
-            try TestFrame.readElement(ptr, with: &context)
+            try TestFrame.readNext(ptr, with: &context) as? TestFrame
         }
         
         XCTAssertNotNil(frame)
@@ -130,7 +130,7 @@ final class PropertyWrapperTests: XCTestCase {
         
         var context = DefaultContext()
         let frame = try bytes.withUnsafeBytes{ ptr in
-            try TestFrame.readElement(ptr, with: &context)
+            try TestFrame.readNext(ptr, with: &context) as? TestFrame
         }
         
         XCTAssertNotNil(frame)
@@ -150,7 +150,7 @@ final class PropertyWrapperTests: XCTestCase {
         
         var context = DefaultContext()
         let frame = try bytes.withUnsafeBytes{ ptr in
-            try TestFrame.readElement(ptr, with: &context)
+            try TestFrame.readNext(ptr, with: &context) as? TestFrame
         }
         
         XCTAssertNotNil(frame)
@@ -188,8 +188,8 @@ final class PropertyWrapperTests: XCTestCase {
             2,              // TestFrame.suparraycount
             4,              // TestFrame.arrayCount
             
-            4,               // TestChild.count
-            0,1,2,3,         // TestChild.subarray
+            3,               // TestChild.count
+            0,1,2,           // TestChild.subarray
             23,42,            // TestChild.suparray
             116,101,115,116,  // TestChild.text
             
@@ -200,7 +200,7 @@ final class PropertyWrapperTests: XCTestCase {
         
         var context = DefaultContext()
         let frame = try bytes.withUnsafeBytes{ ptr in
-            try TestFrame.readElement(ptr, with: &context)
+            try TestFrame.readNext(ptr, with: &context) as? TestFrame
         }
         
         XCTAssertNotNil(frame)
@@ -209,7 +209,7 @@ final class PropertyWrapperTests: XCTestCase {
         
         XCTAssertNotNil(frame?.child)
         XCTAssertEqual(frame?.child?.count, 0)
-        XCTAssertEqual(frame?.child?.subarray, [0,1,2,3])
+        XCTAssertEqual(frame?.child?.subarray, [0,1,2])
         
         XCTAssertEqual(frame?.child?.suparray, [23,42])
         //XCTAssertEqual(frame?.child?.text, "test")
@@ -232,7 +232,7 @@ final class PropertyWrapperTests: XCTestCase {
 
         var context = DefaultContext()
         let frame = try bytes.withUnsafeBytes{ ptr in
-            try TestFrame.readElement(ptr, with: &context)
+            try TestFrame.readNext(ptr, with: &context) as? TestFrame
         }
         
         XCTAssertEqual(frame?.array, [0,1,2,3,4,5,6,7,8,9])

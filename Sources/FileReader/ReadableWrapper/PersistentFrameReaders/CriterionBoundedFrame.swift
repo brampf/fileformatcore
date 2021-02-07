@@ -34,9 +34,9 @@ public struct CriterionBoundedFrame<Parent: BaseFile, R: ReadableElement, Criter
         
         let parent = context.root?.readable as? Parent
         repeat {
-            if let next = try R.readElement(bytes, with: &context, symbol) {
-                new.append(next)
-            }
+            var next = R.new()
+            try next.read(bytes, context: &context, symbol)
+            new.append(next)
             
         } while context.offset < (context.head?.endOffset ?? bytes.endIndex) && parent != nil && parent![keyPath: bound] != criterion
          

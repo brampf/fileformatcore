@@ -64,8 +64,43 @@ final class ReaderTests: XCTestCase {
         let bytes : [UInt8] = [42]
         
         var context = DefaultContext()
+        let frame = try bytes.withUnsafeBytes{ ptr in            
+            try TestFrame.readNext(ptr, with: &context, nil) as? TestFrame
+        }
+        
+        XCTAssertNotNil(frame)
+        XCTAssertEqual(frame?.number, 42)
+        
+    }
+    
+    func testReadElement() throws {
+        
+        struct TestFrame : ReadableElement {
+            
+            static func new() -> TestFrame {
+                TestFrame(byteSize: 16)
+            }
+            
+            mutating func read<C>(_ bytes: UnsafeRawBufferPointer, context: inout C, _ symbol: String?) throws where C : Context {
+                self.number = try bytes.read(&context.offset, byteSwapped: context.bigEndian, symbol)
+            }
+            
+            static func next<C>(_ bytes: UnsafeRawBufferPointer, with context: C, _ symbol: String?) throws -> (element: ReadableElement.Type?, size: Int?) where C : Context {
+                (TestFrame.self,nil)
+            }
+            
+            var byteSize: Int
+            
+            
+            @Persistent var number : UInt8 = 0
+            
+        }
+        
+        let bytes : [UInt8] = [42]
+        
+        var context = DefaultContext()
         let frame = try bytes.withUnsafeBytes{ ptr in
-            try TestFrame.readElement(ptr, with: &context, nil)
+            try TestFrame.readNext(ptr, with: &context, nil) as? TestFrame
         }
         
         XCTAssertNotNil(frame)

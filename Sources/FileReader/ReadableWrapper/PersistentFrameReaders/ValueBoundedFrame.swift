@@ -35,14 +35,11 @@ public struct ValueBoundedFrame<R: ReadableElement & Equatable> : PersistentFram
         
         var condition = false
         repeat {
-            if let next = try R.new(bytes, with: &context, symbol) {
-                new.append(next)
+            var next = R.new()
+            try next.read(bytes, context: &context, symbol)
+            new.append(next)
                 
-                condition = next != bound
-            } else {
-                // warning??
-                continue
-            }
+            condition = next != bound
             
         } while context.offset < (context.head?.endOffset ?? bytes.endIndex) && condition
         

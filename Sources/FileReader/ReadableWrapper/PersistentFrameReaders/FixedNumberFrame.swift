@@ -32,9 +32,9 @@ public struct FixedNumberFrame<R: ReadableElement, F: FixedWidthInteger> : Persi
         var new : [R] = .init()
         
         for _ in 0 ..< bound {
-            if let next = try R.readElement(bytes, with: &context, symbol) {
-                new.append(next)
-            }
+            var next = R.new()
+            try next.read(bytes, context: &context, symbol)
+            new.append(next)
         }
         return new
     }

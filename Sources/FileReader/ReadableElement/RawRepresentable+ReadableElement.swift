@@ -27,11 +27,9 @@ extension RawRepresentable where RawValue : ReadableElement {
     /// Read `FixedWidthInteger`
     public static func new<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String? = nil) throws -> Self? {
         
-        if let new = try RawValue.readElement(bytes, with: &context, symbol) {
-            return Self.init(rawValue: new)
-        } else {
-            return nil
-        }
+        var new = RawValue.new()
+        try new.read(bytes, context: &context, symbol)
+        return Self.init(rawValue: new)
     }
     
     public var byteSize: Int {

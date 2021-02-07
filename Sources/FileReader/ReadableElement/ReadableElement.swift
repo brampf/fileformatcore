@@ -24,107 +24,36 @@
 
 import Foundation
 
-/// A `Readable` element is a container for a serieos of `ReadableValue`
+/// A `Readable` element whose properties can be read
 public protocol ReadableElement : Readable {
     
-    /// defaut initializer used to create new instances
-    //init()
+    /// Factory method to create a new instance without the need for an empty initializer
+    static func new() -> Self
     
-    /// method to read property values of this `Readable` from raw data
+    /**
+    method to read property values of this `Readable` from raw data
+     - Parameters:
+        -  data: The `UnsafeRawBufferPointer` to read from
+        -  context : The `Context` to use for reading the data
+     */
     mutating func read<C: Context>(_ bytes: UnsafeRawBufferPointer, context: inout C, _ symbol: String?) throws
     
-    /**
-     Implementation of this function allows to provide a size for the the readable; This allows the parser to check against the resulting upper bound when reading child values
-     
-     - Parameters:
-     -  data: The `UnsafeRawBufferPointer` to read from
-     -  context : The `Context` to use for reading the data
-     
-     - Returns Size of this `Readable`in bytes or `nil` if the only upper bound is EOF
-     */
-    static func size<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C) -> Int?
-    
 }
 
-//MARK:- Reader implementation
 extension ReadableElement {
     
-    /**
-     standard reading method
-     */
-    public static func readElement<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String? = nil) throws -> Self? {
+    
+    internal func readElement<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String? = nil) throws -> Self?  {
+    
+        var new = Self.new()
         
-        print("[\(String(describing: context.offset).padding(toLength: 8, withPad: " ", startingAt: 0))] READ \(symbol ?? "") : \(type(of: self))")
+        context.push(new, size: nil)
         
-        // create new instance
-        guard var new = try Self.new(bytes, with: &context, symbol) else {
-            return nil
-        }
-        
-        // see if the frame size can be determined
-        let size = Self.size(bytes, with: &context)
-        
-        // push this element onto the stack
-        context.push(new, size: size)
-        
-        // read all readable values of this element
         try new.read(bytes, context: &context, symbol)
+    
+        _ = try context.pop()
         
-        // pop the stack
-        let closing = try context.pop()
-        
-        // check that we popped the correct element
-        guard closing is Self else {
-            // if not, continuing makes no sense as we don't know where we acutally are
-            throw ReaderError.internalError(ErrorStack(nil, Self.self, context.offset), "Closing the wrong Element")
-        }
-        
-        // return new freshly read element
         return new
-        
     }
     
-    mutating public func read<C: Context>(_ bytes: UnsafeRawBufferPointer, context: inout C, _ symbol: String? = nil) throws {
-        
-        let mirror = Mirror(reflecting: self)
-        try recursiveRead(mirror, from: bytes, context: &context)
-    }
-    
-    private func recursiveRead<C: Context>(_ mirror: Mirror, from bytes: UnsafeRawBufferPointer, context: inout C) throws {
-        
-        // read super readable first
-        if let sup = mirror.superclassMirror {
-            try recursiveRead(sup, from: bytes, context: &context)
-        }
-        
-        // read this readable
-        try mirror.children.forEach{ child in
-            if var wrapper = child.value as? ReadableWrapper {
-                try wrapper.read(bytes, context: &context, child.label)
-            }
-        }
-    }
 }
-
-//MARK:- Debug Representations
-extension ReadableElement {
-    
-    public var debugLayout : String {
-        return self.debugLayout(0)
-    }
-    
-    func debugLayout(_ level: Int = 0) -> String {
-        var ret = String(repeating: " ", count: level)+"⎿"+" (\(Self.self)) [\(self.byteSize) bytes]"
-        
-        let mirror = Mirror(reflecting: self)
-        mirror.children.forEach{ child in
-            
-            if let mem = child.value as? ReadableWrapper {
-                ret += "\n"
-                ret += mem.debugLayout(level+1)
-            }
-        }
-        return ret
-    }
-}
-
