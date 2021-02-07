@@ -26,7 +26,7 @@
  A `PersistentFrameReader` to read arrays up to a specific length based on the value of a previously read property
 
 */
-public struct CounterBoundedFrame<Parent: ReadableElement, R: ReadableElement, F: FixedWidthInteger & ReadableElement> : PersistentFrameReader {
+public struct CounterBoundedFrame<Parent: AnyReadable, R: AnyReadable, F: FixedWidthInteger & AnyReadable> : PersistentFrameReader {
     public  typealias  Value = [R]
     
     public var bound : KeyPath<Parent,F>
@@ -48,9 +48,10 @@ public struct CounterBoundedFrame<Parent: ReadableElement, R: ReadableElement, F
         var new : [R] = .init()
         
         for _ in 0 ..< count {
-            var next = R.new()
-            try next.read(bytes, context: &context, symbol)
-            new.append(next)
+            
+            if let next = try R.read(bytes, with: &context, symbol) {
+                new.append(next)
+            }
             context.head?.index += 1
         }
         
@@ -59,3 +60,9 @@ public struct CounterBoundedFrame<Parent: ReadableElement, R: ReadableElement, F
     }
 }
 
+extension Persistent where Parent : AnyReadable, Meta: FixedWidthInteger & AnyReadable, Bound == CounterBoundedFrame<Parent, Value, Meta> {
+    
+    convenience public init(wrappedValue initialValue: Bound.Value, _ path: KeyPath<Parent, Meta>) {
+        self.init(wrappedValue: initialValue, CounterBoundedFrame(bound: path))
+    }
+}

@@ -24,7 +24,7 @@
 
 import Foundation
 
-public struct EmptyFrame : ReadableFrame {
+public struct EmptyFrame : AutoReadable {
     
     public init() {
         
@@ -35,7 +35,7 @@ public struct EmptyFrame : ReadableFrame {
     }
 }
 
-@propertyWrapper public class Persistent<Parent: ReadableElement, Value, Meta, Bound : PersistentFrameReader> {
+@propertyWrapper public class Persistent<Parent: AnyReadable, Value, Meta, Bound : PersistentFrameReader> {
     
     internal var uuid : UUID = UUID()
     

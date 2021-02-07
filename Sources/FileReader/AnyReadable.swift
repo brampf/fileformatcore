@@ -22,57 +22,61 @@
  
  */
 
-/// An abstract 'Readable'
-public protocol Readable {
+public protocol AnyReadable {
     
-    /**
-     Factoy method returning a `ReadableElement`
-     */
-    static func next<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: C, _ symbol: String?) throws -> (element: ReadableElement.Type?, size: Int?)
+    /// crate a new Instance and initialize with default values without moving the offset
+    static func new<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String?) throws -> Self?
+    
+    /// determines an upper bound of the entity
+    static func upperBound<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C) throws -> Int?
+    
+    /// Read all readable values
+    mutating func read<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String?, upperBound: Int?) throws
     
     /// size of this readable in bytes
     var byteSize : Int { get }
     
     /// returns as textual tree representation of  this `Readable` and its children
     var debugLayout : String { get }
+    
 }
 
 //MARK:- Reader implementation
-extension Readable {
+extension AnyReadable {
     
     /**
      standard reading method
      */
-    public static func readNext<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String? = nil) throws -> Readable? {
+    public static func read<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String? = nil) throws -> Self? {
         
-        try self.readNext(bytes, with: &context, symbol, endOffset: nil)
+        try Self.read(bytes, with: &context, symbol, upperBound: nil)
     }
     
     /**
      standard reading method
      */
-    public static func readNext<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String? = nil, endOffset: Int? = nil) throws -> Readable? {
+    public static func read<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String? = nil, upperBound: Int? = nil) throws -> Self? {
         
         print("[\(String(describing: context.offset).padding(toLength: 8, withPad: " ", startingAt: 0))] READ \(symbol ?? "") : \(type(of: self))")
         
-        let nextElement = try next(bytes, with: context, symbol)
-        
         // create new instance
-        guard var new = nextElement.element?.new() else {
+        guard var new = try Self.new(bytes, with: &context, symbol) else {
             return nil
         }
         
-        // see if the frame size can be determined
-        var upperBound = endOffset
-        if let bound = nextElement.size {
-            upperBound = bound + context.offset
+        var endOffset : Int? = nil
+        if let bound = try Self.upperBound(bytes, with: &context) {
+            endOffset = bound
         }
-        
+        if let bound =  upperBound {
+            endOffset = bound
+        }
+         
         // push this element onto the stack
-        context.push(new, upperBound: upperBound)
+        context.push(new, upperBound: endOffset)
         
         // read all readable values of this element
-        try new.read(bytes, context: &context, symbol)
+        try new.read(bytes, with: &context, symbol, upperBound: endOffset)
         
         // pop the stack
         let closing = try context.pop()
@@ -87,10 +91,11 @@ extension Readable {
         return new
         
     }
+    
 }
 
 //MARK:- Debug Representations
-extension Readable {
+extension AnyReadable {
     
     public var debugLayout : String {
         return self.debugLayout(0)
@@ -110,4 +115,3 @@ extension Readable {
         return ret
     }
 }
-

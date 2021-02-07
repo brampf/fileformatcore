@@ -22,57 +22,36 @@
  
  */
 
-extension FixedWidthInteger where Self : ReadableValue {
+import Foundation
+
+extension String : AnyReadable {
     
-    public init(){
-        self = .zero
+    public static func new<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String?) throws -> Self? {
+        return .init()
     }
     
-    /// Read `FixedWidthInteger`
-    public mutating func read<C: Context>(_ bytes: UnsafeRawBufferPointer, context: inout C, _ symbol: String?) throws {
+    public static func upperBound<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C) throws -> Int? {
+        return nil
+    }
+    
+    public mutating func read<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String?, upperBound: Int?) throws {
+     
+        let length = (context.head?.endOffset ?? bytes.endIndex) - context.offset
         
-        //print("[\(String(describing: context.offset).padding(toLength: 8, withPad: " ", startingAt: 0))] READ \(name ?? "") : \(type(of: self))")
+        // print("[\(String(describing: context.offset).padding(toLength: 8, withPad: " ", startingAt: 0))] READ \(name ?? "") : \(type(of: self))")
         
-        self = try bytes.read(&context.offset, byteSwapped: context.bigEndian, symbol)
+        if let new = try bytes.read(&context.offset, len: length, encoding: .utf8, symbol) {
+            self = new
+        } else {
+            self = ""
+        }
     }
     
     public var byteSize: Int {
-        MemoryLayout<Self>.size
+        self.count * MemoryLayout<Self.Element>.size
     }
     
-    public var debugLayout : String {
-        self.debugLayout
+    public var debugLayout: String {
+        return "String[\(byteSize)] : »\(self)«"
     }
-}
-
-extension Int64 : ReadableValue {
-    
-}
-
-extension Int32 : ReadableValue {
-    
-}
-
-extension Int16 : ReadableValue {
-    
-}
-
-extension Int8 : ReadableValue {
-    
-}
-
-extension UInt64 : ReadableValue {
-    
-}
-
-extension UInt32 : ReadableValue {
-    
-}
-
-extension UInt16 : ReadableValue {
-    
-}
-
-extension UInt8 : ReadableValue {
-    
 }

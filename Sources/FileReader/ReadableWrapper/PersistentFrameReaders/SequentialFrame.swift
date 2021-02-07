@@ -24,7 +24,7 @@
 
 import Foundation
 
-struct SequentialFrame<R: Readable> : PersistentFrameReader {
+struct SequentialFrame<R: AnyReadable> : PersistentFrameReader {
     typealias Value = [R]
     
     public var bound : [UInt8]
@@ -122,7 +122,7 @@ struct SequentialFrame<R: Readable> : PersistentFrameReader {
     
     public func factory<C: Context>(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout C, start: Int, stop: Int) throws -> R? {
         
-        let new = try R.readNext(bytes, with: &context, symbol, endOffset: stop) as? R
+        let new = try R.read(bytes, with: &context, symbol)
    
         context.head?.index += 1
 

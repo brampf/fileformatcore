@@ -22,28 +22,52 @@
  
  */
 
-/// A `ReadableElement` with a default implementation to read all properties wrapped as `ReadableWrapper` and
-public protocol ReadableFrame : ReadableElement {
+
+public protocol AutoReadable : AnyReadable {
     
-    /// defaut initializer used to create new instances
     init()
     
 }
 
-//MARK:- Default implementation of ReadableElement
-extension ReadableFrame {
+// default implementations
+extension AutoReadable {
     
-    /// in frames
-    public static func new() -> Self {
-        return Self.init()
+    public static func new<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String?) throws -> Self? {
+        Self()
     }
     
-    /// In Frames, the factory methos always returns a new instance of Self by calling the default initializer
-    /// in Frames, the size in bytes is initially unbound unless this method is implemtend differentyl
-    public static func next<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: C, _ symbol: String?) throws -> (element: ReadableElement.Type?, size: Int?) {
+    public static func upperBound<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C) throws -> Int? {
+        /// AutoReadable is unbounded by default
+        return nil
+    }
+}
+
+extension AutoReadable {
+ 
+    public func read<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String?, upperBound: Int?) throws {
         
-        return (Self.self, nil)
+        let mirror = Mirror(reflecting: self)
+        try recursiveRead(mirror, from: bytes, context: &context)
     }
+    
+    private func recursiveRead<C: Context>(_ mirror: Mirror, from bytes: UnsafeRawBufferPointer, context: inout C) throws {
+        
+        // read super readable first
+        if let sup = mirror.superclassMirror {
+            try recursiveRead(sup, from: bytes, context: &context)
+        }
+        
+        // read this readable
+        try mirror.children.forEach{ child in
+            if var wrapper = child.value as? ReadableWrapper {
+                try wrapper.read(bytes, context: &context, child.label)
+            }
+        }
+    }
+    
+}
+
+extension AutoReadable {
     
     /// In Frames, the size in bytes is the sum of the the children stored in `ReadableWrappers`
     public var byteSize : Int {
@@ -68,31 +92,6 @@ extension ReadableFrame {
             return size
         }
         
-    }
-    
-}
-
-extension ReadableFrame {
-    
-    public  mutating func read<C: Context>(_ bytes: UnsafeRawBufferPointer, context: inout C, _ symbol: String?) throws {
-        
-        let mirror = Mirror(reflecting: self)
-        try recursiveRead(mirror, from: bytes, context: &context)
-    }
-    
-    private func recursiveRead<C: Context>(_ mirror: Mirror, from bytes: UnsafeRawBufferPointer, context: inout C) throws {
-        
-        // read super readable first
-        if let sup = mirror.superclassMirror {
-            try recursiveRead(sup, from: bytes, context: &context)
-        }
-        
-        // read this readable
-        try mirror.children.forEach{ child in
-            if var wrapper = child.value as? ReadableWrapper {
-                try wrapper.read(bytes, context: &context, child.label)
-            }
-        }
     }
     
 }

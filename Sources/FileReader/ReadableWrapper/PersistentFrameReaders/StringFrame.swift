@@ -22,7 +22,7 @@
  
  */
 
-public struct StringFrame<Parent: ReadableElement, F: FixedWidthInteger & ReadableElement> : PersistentFrameReader {
+public struct StringFrame<Parent: AnyReadable, F: FixedWidthInteger & AnyReadable> : PersistentFrameReader {
     
     public typealias Value = String
     
@@ -50,6 +50,27 @@ public struct StringFrame<Parent: ReadableElement, F: FixedWidthInteger & Readab
             return try bytes.read(&context.offset, len: context.head?.endOffset ?? bytes.count, symbol)
         }
         
+    }
+    
+}
+
+extension Persistent where Parent == EmptyFrame, Value == String, Meta == UInt8, Bound == StringFrame<Parent, Meta> {
+    
+    
+    convenience public init(wrappedValue initialValue: Bound.Value, _ type: StringFrame<Parent,Meta>.StringType = .utf8) {
+        
+        self.init(wrappedValue : initialValue, StringFrame(type: type))
+    }
+    
+}
+
+
+extension Persistent where Value == String, Bound == StringFrame<Parent, Meta> {
+    
+    
+    convenience public init(wrappedValue initialValue: Bound.Value, _ path: KeyPath<Parent, Transient<Parent,Meta>>? = nil, _ type: StringFrame<Parent,Meta>.StringType = .utf8) {
+        
+        self.init(wrappedValue : initialValue, StringFrame(bound: path, type: type))
     }
     
 }

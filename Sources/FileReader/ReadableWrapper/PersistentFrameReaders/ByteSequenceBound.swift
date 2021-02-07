@@ -22,7 +22,7 @@
  
  */
 
-struct ByteSequence<R: ReadableElement> : PersistentFrameReader {
+struct ByteSequence<R: AnyReadable> : PersistentFrameReader {
     typealias Value = String
     
     public var bound : [UInt8]

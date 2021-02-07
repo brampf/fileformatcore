@@ -23,7 +23,7 @@
  */
 
 protocol PreReadValidationRule : ValidationRule {
-    associatedtype Element : ReadableElement
+    associatedtype Element : AnyReadable
     
     func validate(_ bytes: Slice<UnsafeRawBufferPointer>) -> Output
     

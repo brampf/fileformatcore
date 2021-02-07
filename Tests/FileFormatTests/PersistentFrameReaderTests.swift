@@ -53,7 +53,7 @@ final class PersistentFrameReaderTests: XCTestCase {
             
         }
         
-        struct Child : ReadableFrame {
+        struct Child : AutoReadable {
             
             @Persistent var index : UInt8 = 0
             

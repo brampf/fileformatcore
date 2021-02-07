@@ -22,12 +22,34 @@
  
  */
 
-extension Persistent where Parent == EmptyFrame, Value: ReadableElement, Meta == Void, Bound == SingleElementFrame<Value> {
+
+extension Optional : AnyReadable where Wrapped : AnyReadable {
     
-    convenience public init(wrappedValue initialValue: Value) {
-        self.init(wrappedValue: initialValue, SingleElementFrame())
+    public static func new<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String?) throws -> Self? {
+        return Self.init(nilLiteral: ())
     }
+
+    public static func upperBound<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C) throws -> Int? {
+        try Wrapped.upperBound(bytes, with: &context)
+    }
+    
+    public mutating func read<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String?, upperBound: Int?) throws {
+        
+        if var me = self {
+            try me.read(bytes, with: &context, symbol, upperBound: upperBound)
+            // assign back as 'me' is not a reference but a copy
+            self = me
+        } else {
+            // uninitialized Optional
+            if let new = try Wrapped.read(bytes, with: &context, symbol) {
+                self = new
+            }
+        }
+        
+    }
+    
+    public var byteSize: Int {
+        self?.byteSize ?? 0
+    }
+
 }
-
-
-

@@ -26,7 +26,7 @@
 public final class LocalContext {
     
     /// the `Readable` currently read
-    public let readable : Readable
+    public let readable : AnyReadable
     
     /// the offset of the starting location
     public let startOffset : Int
@@ -43,7 +43,7 @@ public final class LocalContext {
     /// the local context to use without moving the global context
     public var offset : Int
     
-    init(_ readable: Readable, _ start: Int, _ end: Int?) {
+    init(_ readable: AnyReadable, _ start: Int, _ end: Int?) {
         self.readable = readable
         self.startOffset = start
         self.endOffset = end

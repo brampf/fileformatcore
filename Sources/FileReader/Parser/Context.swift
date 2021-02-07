@@ -50,13 +50,13 @@ public protocol Context {
     var parent : LocalContext? { get  }
     
     /// creating local context for the next `Readable` to read
-    func push(_ node: Readable, upperBound: Int?)
+    func push(_ node: AnyReadable, upperBound: Int?)
     
     /// removing local context for the last `Readable` just read
-    func pop() throws -> Readable?
+    func pop() throws -> AnyReadable?
     
     /// searches for a value for the given KeyPath form the head down though all local context
-    func seek<Root: Readable,Value>(for path: KeyPath<Root,Value>) -> Value?
+    func seek<Root: AnyReadable,Value>(for path: KeyPath<Root,Value>) -> Value?
 
     /// default initializer
     init(using configuration: Configuration, out: ((Output) -> Void)?)

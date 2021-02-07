@@ -22,17 +22,32 @@
  
  */
 
-/// A `Readable` value with known, finite memory layout
-public protocol ReadableValue : ReadableFrame {
-    
+import Foundation
 
-}
-
-extension ReadableValue {
+extension Data : AnyReadable {
     
-    func layout(_ value: String? ) -> String {
-        "[\(byteSize)".padding(toLength: 8, withPad: " ", startingAt: 0)
-        + "] \(type(of:self))".padding(toLength: 16, withPad: " ", startingAt: 0)
-        + (value ?? "")
+    public static func new<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String?) throws -> Self? {
+        return .init()
     }
+    
+    public static func upperBound<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C) throws -> Int? {
+        return nil
+    }
+    
+    public mutating func read<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String?, upperBound: Int?) throws {
+        
+        let upperBound = upperBound ?? context.head?.endOffset ?? bytes.endIndex
+        
+        if let new = try bytes.read(&context.offset, upperBound: upperBound, byteSwapped: context.bigEndian, symbol) {
+            self = new
+        } else {
+            self = Data()
+        }
+        
+    }
+    
+    public var byteSize: Int {
+        self.count
+    }
+    
 }

@@ -24,7 +24,7 @@
 
 import Foundation
 
-public struct FixedCharBoundedFrame<F: UnsignedInteger & FixedWidthInteger & ReadableElement> : PersistentFrameReader {
+public struct FixedCharBoundedFrame<F: UnsignedInteger & FixedWidthInteger & AnyReadable> : PersistentFrameReader {
     public typealias Value = String
     
     public var bound : F = .zero
@@ -43,7 +43,7 @@ public struct FixedCharBoundedFrame<F: UnsignedInteger & FixedWidthInteger & Rea
 }
 
 extension Persistent where
-    Meta : UnsignedInteger & FixedWidthInteger & ReadableElement,
+    Meta : UnsignedInteger & FixedWidthInteger & AnyReadable,
     Value == String,
     Parent == EmptyFrame,
     Bound == FixedCharBoundedFrame<Meta>

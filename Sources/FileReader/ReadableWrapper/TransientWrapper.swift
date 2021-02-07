@@ -24,7 +24,7 @@
 
 import Foundation
 
-public class AnyTransient<Parent: ReadableElement> {
+public class AnyTransient<Parent: AnyReadable> {
     
     var instance : Parent!
 }
@@ -32,7 +32,7 @@ public class AnyTransient<Parent: ReadableElement> {
 /**
  A property who's value is read and thus can be used as counter or condition in other property wrappers but who's value is computed at runtime
  */
-@propertyWrapper public final class Transient<Parent: ReadableElement, Value: ReadableElement> : AnyTransient<Parent> {
+@propertyWrapper public final class Transient<Parent: AnyReadable, Value: AnyReadable> : AnyTransient<Parent> {
     
     var bound : KeyPath<Parent,Value>
     
@@ -44,22 +44,11 @@ public class AnyTransient<Parent: ReadableElement> {
     }
 }
 
-extension Transient where Value : ReadableFrame {
-    
-    public convenience init( _ bound: KeyPath<Parent,Value>){
-        self.init(wrappedValue: Value.init(), bound)
-    }
-    
-}
-
 extension Transient : ReadableWrapper {
 
     public func read<C: Context>(_ bytes: UnsafeRawBufferPointer, context: inout C, _ symbol: String? = nil) throws {
         
-        var value : Value = Value.new()
-            
-        try value.read(bytes, context: &context, symbol)
-            
+        let value = try Value.read(bytes, with: &context)
         // store in context to access later
         context.head?.transients[bound] = value
     }

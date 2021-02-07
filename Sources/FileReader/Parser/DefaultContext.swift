@@ -47,12 +47,12 @@ open class DefaultContext<Configuration: FileConfiguration> : Context {
         
     }
     
-    public func push(_ node: Readable, upperBound: Int?){
+    public func push(_ node: AnyReadable, upperBound: Int?){
         
         stack.append(.init(node, offset, upperBound))
     }
     
-    public func pop() throws -> Readable? {
+    public func pop() throws -> AnyReadable? {
         
         if let element = stack.popLast(){
             
@@ -112,7 +112,7 @@ open class DefaultContext<Configuration: FileConfiguration> : Context {
     }
     
     /// seeks for a specific, previously read value in the file hierachy by looking for the first match for the `Root.Type` from top to down of the reader stack
-    public func seek<Root: Readable,Value>(for path: KeyPath<Root,Value>) -> Value? {
+    public func seek<Root: AnyReadable,Value>(for path: KeyPath<Root,Value>) -> Value? {
         
         for idx in stride(from: stack.count-1, through: 0, by: -1) {
             if let root = stack[idx].readable as? Root {
@@ -129,7 +129,7 @@ open class DefaultContext<Configuration: FileConfiguration> : Context {
     }
     
     /// stored the provided value as transient
-    public func transientStore<Root: Readable,Value>(for path: KeyPath<Root,Value>) -> Value? {
+    public func transientStore<Root: AnyReadable,Value>(for path: KeyPath<Root,Value>) -> Value? {
         
         for idx in stride(from: stack.count-1, through: 0, by: -1) {
             

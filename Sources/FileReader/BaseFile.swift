@@ -27,7 +27,7 @@ import Foundation
 /**
   The root Frame of the the whole file structure, offering convenience inistializers a
  */
-public protocol BaseFile : ReadableFrame {
+public protocol BaseFile : AutoReadable {
     associatedtype Context : FileReader.Context
     
     init()
@@ -50,7 +50,7 @@ extension BaseFile {
         var context = Context.init(using: configuration, out: out)
         
         return try data.withUnsafeBytes { ptr in
-            try readNext(ptr, with: &context, "\(type(of: self))") as? Self
+            try Self.read(ptr, with: &context, "\(type(of: self))")
         }
         
     }
@@ -70,7 +70,7 @@ extension BaseFile {
         var context = Context.init(using: configuration, out: out)
         
         return try data.withUnsafeBytes { ptr in
-            try readNext(ptr, with: &context, "\(type(of: self))") as? Self
+            try Self.read(ptr, with: &context, "\(type(of: self))")
         }
         
     }

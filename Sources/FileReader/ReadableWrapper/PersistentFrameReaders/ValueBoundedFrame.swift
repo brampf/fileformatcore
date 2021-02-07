@@ -24,7 +24,7 @@
 
 import Foundation
 
-public struct ValueBoundedFrame<R: ReadableElement & Equatable> : PersistentFrameReader {
+public struct ValueBoundedFrame<R: AnyReadable & Equatable> : PersistentFrameReader {
     public typealias Value = [R]
     
     public var bound : R
@@ -35,16 +35,24 @@ public struct ValueBoundedFrame<R: ReadableElement & Equatable> : PersistentFram
         
         var condition = false
         repeat {
-            var next = R.new()
-            try next.read(bytes, context: &context, symbol)
-            new.append(next)
+            if let next = try R.read(bytes, with: &context, symbol) {
+                new.append(next)
                 
-            condition = next != bound
+                condition = next != bound
+            }
             
         } while context.offset < (context.head?.endOffset ?? bytes.endIndex) && condition
         
         return new
         
+    }
+    
+}
+
+extension Persistent where Parent == EmptyFrame, Meta: Equatable, Bound == ValueBoundedFrame<Value>, Meta == Value {
+    
+    convenience public init(wrappedValue initialValue: Bound.Value, equals criterion: Meta) {
+        self.init(wrappedValue: initialValue, ValueBoundedFrame(bound: criterion))
     }
     
 }

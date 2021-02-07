@@ -22,7 +22,7 @@
  
  */
 
-public struct CriterionBoundedFrame<Parent: BaseFile, R: ReadableElement, Criterion: Equatable> : PersistentFrameReader {
+public struct CriterionBoundedFrame<Parent: BaseFile, R: AnyReadable, Criterion: Equatable> : PersistentFrameReader {
     public typealias Value = [R]
     
     public var bound : KeyPath<Parent,Criterion>
@@ -37,9 +37,9 @@ public struct CriterionBoundedFrame<Parent: BaseFile, R: ReadableElement, Criter
         
         let parent = context.root?.readable as? Parent
         repeat {
-            var next = R.new()
-            try next.read(bytes, context: &context, symbol)
-            new.append(next)
+            if let next = try R.read(bytes, with: &context, symbol) {
+                new.append(next)
+            }
             
             context.head?.index += 1
             
@@ -48,5 +48,12 @@ public struct CriterionBoundedFrame<Parent: BaseFile, R: ReadableElement, Criter
         context.head?.index = 0
         
         return new
+    }
+}
+
+extension Persistent where Parent : AnyReadable, Meta: Equatable, Bound == CriterionBoundedFrame<Parent, Value, Meta> {
+    
+    convenience public init(wrappedValue initialValue: Bound.Value, _ path: KeyPath<Parent, Meta>, equals criterion: Meta) {
+        self.init(wrappedValue: initialValue, CriterionBoundedFrame(bound: path, criterion: criterion))
     }
 }

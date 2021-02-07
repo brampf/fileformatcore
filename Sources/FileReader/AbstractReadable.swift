@@ -22,13 +22,31 @@
  
  */
 
-extension Persistent where Parent : ReadableElement, Meta: Equatable, Bound == CriterionBoundedFrame<Parent, Value, Meta> {
+/// Ignore and use `AbstractReadable`
+public protocol SomeReadable : AnyObject {
+    associatedtype BaseType : AnyObject
     
-    /*
-    convenience public init(wrappedValue initialValue: Bound.Value, _ path: KeyPath<Parent, Meta>, equals criterion: Meta) {
-        self.init(wrappedValue: initialValue, CriterionBoundedFrame(bound: path, criterion: criterion))
-    }
-    */
+    /**
+     Factoy method returning a `Readable`
+     */
+    static func next<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: C, _ symbol: String?) throws -> BaseType?
+    
 }
 
+/**
+ An abstract readable
+ */
+public protocol AbstractReadable : SomeReadable where BaseType == Self {
+    
+    
+}
 
+extension AbstractReadable where Self : AutoReadable {
+    
+    /// "overriding" the default implementation of `new` by calling the `next` method of the `SomeReadable`
+    public static func new<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String?) throws -> Self? {
+    
+        try self.next(bytes, with: context, symbol)
+    }
+    
+}

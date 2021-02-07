@@ -25,7 +25,7 @@
 /**
  Reads child elements into an array until a child matches the comparion provided
  */
-public struct ComparisonBoundedFrame<R: ReadableElement, Criterion: Equatable> : PersistentFrameReader {
+public struct ComparisonBoundedFrame<R: AnyReadable, Criterion: Equatable> : PersistentFrameReader {
     public typealias Value = [R]
     
     public var bound : KeyPath<R,Criterion>
@@ -39,11 +39,11 @@ public struct ComparisonBoundedFrame<R: ReadableElement, Criterion: Equatable> :
         
         var condition = false
         repeat {
-            var next = R.new()
-            try next.read(bytes, context: &context, symbol)
-            new.append(next)
+            if let next = try R.read(bytes, with: &context, symbol) {
+                new.append(next)
                 
-            condition = next[keyPath: bound] != criterion
+                condition = next[keyPath: bound] != criterion
+            }
             
             context.head?.index += 1
             
@@ -53,6 +53,21 @@ public struct ComparisonBoundedFrame<R: ReadableElement, Criterion: Equatable> :
         
         return new
         
+    }
+    
+}
+
+
+extension Persistent where
+    Meta: Equatable,
+    Value == [Parent],
+    Parent : AnyReadable,
+    Bound == ComparisonBoundedFrame<Parent, Meta>
+{
+    
+    convenience public init(wrappedValue initialValue: Bound.Value, _ path: KeyPath<Parent, Meta>, equals criterion: Meta) {
+        
+        self.init(wrappedValue: initialValue, ComparisonBoundedFrame(bound: path, criterion: criterion))
     }
     
 }

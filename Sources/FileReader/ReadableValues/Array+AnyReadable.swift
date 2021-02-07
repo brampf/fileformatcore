@@ -22,40 +22,35 @@
  
  */
 
-extension Array : Readable where Element : Readable {
+extension Array : AnyReadable where Element : AnyReadable {
     
-    public static func next<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: C, _ symbol: String?) throws -> (element: ReadableElement.Type?, size: Int?) {
-        
-        return (Self.self, nil)
-    }
-    
-    public var byteSize: Int {
-        self.reduce(into: 0) { $0 += $1.byteSize }
-    }
-    
-}
-
-
-
-extension Array : ReadableElement where Element : Readable {
-    
-    public static func new() -> Self {
+    public static func new<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String?) throws -> Self? {
         return .init()
     }
     
-    public mutating func read<C: Context>(_ bytes: UnsafeRawBufferPointer, context: inout C, _ symbol: String? = nil) throws {
+    /// determines an upper bound of the entity
+    public static func upperBound<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C) throws -> Int? {
+        return nil
+    }
+    
+    public mutating func read<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String?, upperBound: Int?) throws {
         
-        let upperBound = context.head?.endOffset ?? bytes.endIndex
-         
+        let upperBound = upperBound ?? context.head?.endOffset ?? bytes.endIndex
+        
         var new = [Element]()
         
         while context.offset < upperBound {
-            if let next = try Element.readNext(bytes, with: &context, symbol) as? Element {
+            if let next = try Element.read(bytes, with: &context, symbol) {
                 new.append(next)
             }
         }
         
         self = new
+        
+    }
+
+    public var byteSize: Int {
+        self.reduce(into: 0) { $0 += $1.byteSize }
     }
     
 }

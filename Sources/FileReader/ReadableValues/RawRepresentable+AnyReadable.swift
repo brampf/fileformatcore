@@ -22,16 +22,25 @@
  
  */
 
-extension Persistent where
-    Meta: Equatable,
-    Value == [Parent],
-    Parent : ReadableElement,
-    Bound == ComparisonBoundedFrame<Parent, Meta>
-{
+extension RawRepresentable where RawValue : AnyReadable {
     
-    convenience public init(wrappedValue initialValue: Bound.Value, _ path: KeyPath<Parent, Meta>, equals criterion: Meta) {
+    static func new<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String?) throws -> Self? {
+        return .none
+    }
+    
+    static func upperBound<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C) throws -> Int? {
+        try RawValue.upperBound(bytes, with: &context)
+    }
+    
+    mutating func read<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String?, upperBound: Int?) throws {
         
-        self.init(wrappedValue: initialValue, ComparisonBoundedFrame(bound: path, criterion: criterion))
+        if let new = try RawValue.read(bytes, with: &context), let raw = Self.init(rawValue: new) {
+            self = raw
+        }
+    }
+    
+    public var byteSize: Int {
+        self.rawValue.byteSize
     }
     
 }

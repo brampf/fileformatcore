@@ -27,6 +27,7 @@ final class BaseFileTests: XCTestCase {
     func testSimpleFile() {
         
         struct TestFile : BaseFile {
+            
             typealias Context = DefaultContext<TestConfig>
             
             @Persistent var version : UInt32 = 0
@@ -38,7 +39,7 @@ final class BaseFileTests: XCTestCase {
             }
         }
         
-        struct Field : ReadableFrame {
+        struct Field : AutoReadable {
             static func size<C: Context>(_ data: UnsafeRawBufferPointer, with context: inout C) -> Int? {
                 nil
             }
@@ -60,7 +61,7 @@ final class BaseFileTests: XCTestCase {
             
         }
         
-        struct Tuple : ReadableFrame {
+        struct Tuple : AutoReadable {
             
             init() {
             }
@@ -119,7 +120,7 @@ final class BaseFileTests: XCTestCase {
     
         }
         
-        struct TestElement : ReadableFrame {
+        struct TestElement : AutoReadable {
             
             @Persistent var number : UInt8 = 0
             
@@ -181,7 +182,7 @@ final class BaseFileTests: XCTestCase {
             @Persistent var text: String? = nil
         }
         
-        struct TestField : ReadableFrame {
+        struct TestField : AutoReadable {
             
             @Persistent var number : UInt8 = 0
             
@@ -209,7 +210,7 @@ final class BaseFileTests: XCTestCase {
             @Persistent var aftermath: [UInt8] = []
         }
         
-        struct TestField : ReadableFrame {
+        struct TestField : AutoReadable {
             
             @Persistent var number : UInt8 = 0
             
@@ -253,17 +254,17 @@ final class BaseFileTests: XCTestCase {
     
     func testCustomElement() throws {
         
-        struct TestElement : ReadableElement {
+        struct TestElement : AnyReadable {
             
-            static func new() -> TestElement {
-                TestElement()
+            public static func new<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String?) throws -> Self? {
+                return TestElement()
             }
             
-            static func next<C>(_ bytes: UnsafeRawBufferPointer, with context: C, _ symbol: String?) throws -> (element: ReadableElement.Type?, size: Int?) where C : Context {
-                (TestElement.self, nil)
+            public static func upperBound<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C) throws -> Int? {
+                return nil
             }
             
-            mutating func read<C>(_ bytes: UnsafeRawBufferPointer, context: inout C, _ symbol: String?) throws where C : Context {
+            mutating func read<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String?, upperBound: Int?) throws {
             
                 self.number = try bytes.read(&context.offset, byteSwapped: context.bigEndian)
                 
@@ -294,7 +295,7 @@ final class BaseFileTests: XCTestCase {
         var context = DefaultContext(using: TestConfig(), out: nil
         )
         let frame = try bytes.withUnsafeBytes{ ptr in
-            try TestElement.readNext(ptr, with: &context, nil) as? TestElement
+            try TestElement.read(ptr, with: &context, nil)
         }
         
         XCTAssertEqual(frame?.number, 32)
