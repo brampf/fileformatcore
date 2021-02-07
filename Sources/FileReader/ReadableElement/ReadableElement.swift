@@ -43,16 +43,27 @@ public protocol ReadableElement : Readable {
 extension ReadableElement {
     
     
-    internal func readElement<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String? = nil) throws -> Self?  {
-    
+    internal func readElement<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String? = nil, upperBound: Int? = nil) throws -> Self?  {
+        
+        // create new instance
         var new = Self.new()
         
-        context.push(new, size: nil)
+        // push this element onto the stack
+        context.push(new, upperBound: upperBound)
         
+        // read all readable values of this element
         try new.read(bytes, context: &context, symbol)
-    
-        _ = try context.pop()
         
+        // pop the stack
+        let closing = try context.pop()
+        
+        // check that we popped the correct element
+        guard closing is Self else {
+            // if not, continuing makes no sense as we don't know where we acutally are
+            throw ReaderError.internalError(ErrorStack(nil, Self.self, context.offset), "Closing the wrong Element")
+        }
+        
+        // return new freshly read element
         return new
     }
     

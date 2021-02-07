@@ -45,6 +45,14 @@ extension Readable {
      */
     public static func readNext<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String? = nil) throws -> Readable? {
         
+        try self.readNext(bytes, with: &context, symbol, endOffset: nil)
+    }
+    
+    /**
+     standard reading method
+     */
+    public static func readNext<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String? = nil, endOffset: Int? = nil) throws -> Readable? {
+        
         print("[\(String(describing: context.offset).padding(toLength: 8, withPad: " ", startingAt: 0))] READ \(symbol ?? "") : \(type(of: self))")
         
         let nextElement = try next(bytes, with: context, symbol)
@@ -55,10 +63,13 @@ extension Readable {
         }
         
         // see if the frame size can be determined
-        let size = nextElement.size
+        var upperBound = endOffset
+        if let bound = nextElement.size {
+            upperBound = bound + context.offset
+        }
         
         // push this element onto the stack
-        context.push(new, size: size)
+        context.push(new, upperBound: upperBound)
         
         // read all readable values of this element
         try new.read(bytes, context: &context, symbol)

@@ -43,13 +43,18 @@ public struct CounterBoundedFrame<Parent: ReadableElement, R: ReadableElement, F
             throw ReaderError.internalError(ErrorStack(symbol, Value.self, context.offset), "Counting index for \(type(of: Parent.self)) not found")
         }
         
+        context.head?.index = 0
+        
         var new : [R] = .init()
         
         for _ in 0 ..< count {
-             var next = R.new()
-                try next.read(bytes, context: &context, symbol)
-                new.append(next)
+            var next = R.new()
+            try next.read(bytes, context: &context, symbol)
+            new.append(next)
+            context.head?.index += 1
         }
+        
+        context.head?.index = 0
         return new
     }
 }

@@ -24,7 +24,8 @@
 
 import Foundation
 
-public struct SingleElementFrame<R: ReadableElement> : PersistentFrameReader {
+/// A property wrapper for just one single `Readable`
+public struct SingleElementFrame<R: Readable> : PersistentFrameReader {
     public typealias Value = R
     
     public var bound: Void
@@ -35,8 +36,6 @@ public struct SingleElementFrame<R: ReadableElement> : PersistentFrameReader {
     
     public func read<C: Context>(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout C) throws -> Value? {
 
-        var new = Value.new()
-        try new.read(bytes, context: &context, symbol)
-        return new
+        try Value.readNext(bytes, with: &context, symbol) as? Value
     }
 }

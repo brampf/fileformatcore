@@ -27,7 +27,7 @@
  A reader to hook in with the `PersistentWrapper` to read the the  `ReadableElement` specified as `Value` based on custom configurations
  */
 public protocol PersistentFrameReader {
-    associatedtype Value : ReadableElement
+    associatedtype Value : Readable
     
     func read<C: Context>(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout C) throws -> Value?
 }

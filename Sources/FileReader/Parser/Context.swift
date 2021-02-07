@@ -28,23 +28,36 @@
 public protocol Context {
     associatedtype Configuration: FileConfiguration
     
+    /// global byte offset
     var offset : Int { get set }
     
+    /// byte order for teh file to read
     var bigEndian : Bool { get }
     
+    /// Handler for providing parser output
     var notify: ((Output) -> Void)? {get}
     
+    /// the local configuration
     var config : Configuration { get }
     
-    var root : StackElement? {get}
+    /// Local context for the first `Readable` read in the hierachy
+    var root : LocalContext? {get}
     
-    var head : StackElement? { get set }
+    /// Local context for the last (current)`Readable`in the hierarchy
+    var head : LocalContext? { get set }
     
-    init(using configuration: Configuration, out: ((Output) -> Void)?)
+    /// Local context for the previous (parent)`Readable`in the hierarchy
+    var parent : LocalContext? { get  }
     
-    func push(_ node: ReadableElement, size: Int?)
+    /// creating local context for the next `Readable` to read
+    func push(_ node: Readable, upperBound: Int?)
     
-    func pop() throws -> ReadableElement?
+    /// removing local context for the last `Readable` just read
+    func pop() throws -> Readable?
     
+    /// searches for a value for the given KeyPath form the head down though all local context
     func seek<Root: Readable,Value>(for path: KeyPath<Root,Value>) -> Value?
+
+    /// default initializer
+    init(using configuration: Configuration, out: ((Output) -> Void)?)
 }

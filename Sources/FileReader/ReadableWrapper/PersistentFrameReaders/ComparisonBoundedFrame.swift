@@ -33,6 +33,8 @@ public struct ComparisonBoundedFrame<R: ReadableElement, Criterion: Equatable> :
     
     public func read<C: Context>(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout C) throws -> Value? {
         
+        context.head?.index = 0
+        
         var new : [R] = .init()
         
         var condition = false
@@ -43,7 +45,11 @@ public struct ComparisonBoundedFrame<R: ReadableElement, Criterion: Equatable> :
                 
             condition = next[keyPath: bound] != criterion
             
+            context.head?.index += 1
+            
         } while context.offset < (context.head?.endOffset ?? bytes.endIndex) && condition
+        
+        context.head?.index = 0
         
         return new
         

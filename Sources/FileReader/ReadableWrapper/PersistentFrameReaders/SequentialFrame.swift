@@ -24,16 +24,13 @@
 
 import Foundation
 
-struct SequentialFrame<R: ReadableElement> : PersistentFrameReader {
+struct SequentialFrame<R: Readable> : PersistentFrameReader {
     typealias Value = [R]
     
     public var bound : [UInt8]
     public var divider : UInt8
     public var escape : UInt8
-    
-    public var factory : (Int, Slice<UnsafeRawBufferPointer>) throws -> R
-    
-    
+
     func read<C: Context>(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout C) throws -> Value? {
         
         var ret : [R] = .init()
@@ -49,8 +46,10 @@ struct SequentialFrame<R: ReadableElement> : PersistentFrameReader {
         var elementStart = context.offset
         var elementEnd = context.offset
         
+        context.head?.index = 0
         
         for idx in context.offset..<upperBound {
+            
             let char = bytes[idx]
             
             if char == escape {
@@ -70,8 +69,11 @@ struct SequentialFrame<R: ReadableElement> : PersistentFrameReader {
                 if boundStack == bound.count-1 {
                 
                     // read last element up until here
-                    let new = try factory(elementCount, Slice(base: bytes, bounds: elementStart..<elementEnd))
-                    ret.append(new)
+                    if let new = try factory(symbol, from: bytes, in: &context, start: elementStart, stop: elementEnd) {
+                        ret.append(new)
+                    }
+                    
+                    context.head?.index += 1
                     
                     // move offset to end of the bounding sequence
                     context.offset = elementEnd + bound.count
@@ -90,9 +92,9 @@ struct SequentialFrame<R: ReadableElement> : PersistentFrameReader {
                 let end = wasescaped ? elementEnd-1 : elementEnd
                 
                 // divider found, read element until now
-                let new = try factory(elementCount, Slice(base: bytes, bounds: elementStart..<end))
-                ret.append(new)
-                
+                if let new = try factory(symbol, from: bytes, in: &context, start: elementStart, stop: end) {
+                    ret.append(new)
+                }
                 elementCount += 1
                 
                 // reset offset for next elements
@@ -112,7 +114,18 @@ struct SequentialFrame<R: ReadableElement> : PersistentFrameReader {
             
         }
         
+        context.head?.index = 0
+        
         return ret
     }
     
+    
+    public func factory<C: Context>(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout C, start: Int, stop: Int) throws -> R? {
+        
+        let new = try R.readNext(bytes, with: &context, symbol, endOffset: stop) as? R
+   
+        context.head?.index += 1
+
+        return new
+    }
 }

@@ -30,6 +30,9 @@ public struct CriterionBoundedFrame<Parent: BaseFile, R: ReadableElement, Criter
     
     public func read<C: Context>(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout C) throws -> Value? {
         
+        /// reset local index counter
+        context.head?.index = 0
+        
         var new : [R] = .init()
         
         let parent = context.root?.readable as? Parent
@@ -38,8 +41,12 @@ public struct CriterionBoundedFrame<Parent: BaseFile, R: ReadableElement, Criter
             try next.read(bytes, context: &context, symbol)
             new.append(next)
             
+            context.head?.index += 1
+            
         } while context.offset < (context.head?.endOffset ?? bytes.endIndex) && parent != nil && parent![keyPath: bound] != criterion
          
+        context.head?.index = 0
+        
         return new
     }
 }

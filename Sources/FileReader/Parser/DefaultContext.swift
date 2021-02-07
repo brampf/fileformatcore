@@ -28,7 +28,7 @@ open class DefaultContext<Configuration: FileConfiguration> : Context {
     public var config : Configuration
     
     /// Node Stack
-    var stack : [StackElement] = []
+    var stack : [LocalContext] = []
     /// Stack of transient values
     var transients : [UUID: Any] = [:]
     
@@ -47,16 +47,12 @@ open class DefaultContext<Configuration: FileConfiguration> : Context {
         
     }
     
-    public func push(_ node: ReadableElement, size: Int?){
+    public func push(_ node: Readable, upperBound: Int?){
         
-        if let size = size {
-            stack.append(.init(node, offset, offset+size))
-        } else {
-            stack.append(.init(node, offset, nil))
-        }
+        stack.append(.init(node, offset, upperBound))
     }
     
-    public func pop() throws -> ReadableElement? {
+    public func pop() throws -> Readable? {
         
         if let element = stack.popLast(){
             
@@ -87,7 +83,6 @@ open class DefaultContext<Configuration: FileConfiguration> : Context {
             } else {
                 // no end was expected, so just keep the offset where it is
             }
-            
 
             return element.readable
         } else {
@@ -95,11 +90,11 @@ open class DefaultContext<Configuration: FileConfiguration> : Context {
         }
     }
 
-    public var root : StackElement? {
+    public var root : LocalContext? {
         return stack.first
     }
     
-    public var head : StackElement? {
+    public var head : LocalContext? {
         get {
             return stack.last
         }
@@ -109,6 +104,11 @@ open class DefaultContext<Configuration: FileConfiguration> : Context {
                 stack.append(new)
             }
         }
+    }
+    
+    public var parent : LocalContext? {
+        return stack.count > 1 ? stack[stack.count-2] : nil
+        
     }
     
     /// seeks for a specific, previously read value in the file hierachy by looking for the first match for the `Root.Type` from top to down of the reader stack

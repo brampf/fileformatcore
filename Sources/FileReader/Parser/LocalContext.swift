@@ -22,21 +22,34 @@
  
  */
 
-public protocol ReaderStackElement {
+/// A Local context for every indiviudal `Readable`
+public final class LocalContext {
     
-}
-
-public final class StackElement {
+    /// the `Readable` currently read
+    public let readable : Readable
     
-    public let readable : ReadableElement
+    /// the offset of the starting location
     public let startOffset : Int
-    public let endOffset : Int?
-    public var transients : [AnyKeyPath: Any] = [:]
     
-    init(_ readable: ReadableElement, _ start: Int, _ end: Int?) {
+    /// the offset of the upper bound for this readable or `nil` if there is no upper bound
+    public let endOffset : Int?
+    
+    /// a map of local, transient variables
+    internal var transients : [AnyKeyPath: Any] = [:]
+    
+    /// the index in a sequence of elements read
+    public var index : Int
+    
+    /// the local context to use without moving the global context
+    public var offset : Int
+    
+    init(_ readable: Readable, _ start: Int, _ end: Int?) {
         self.readable = readable
         self.startOffset = start
         self.endOffset = end
+        
+        self.offset = startOffset
+        self.index = 0
     }
 }
 
