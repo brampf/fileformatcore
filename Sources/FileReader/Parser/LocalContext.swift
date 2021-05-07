@@ -53,5 +53,12 @@ public final class LocalContext {
     }
 }
 
+extension LocalContext : CustomDebugStringConvertible {
+    
+    public var debugDescription: String {
+        return "[\(startOffset)...\(endOffset)] \(type(of: readable))"
+    }
+    
+}
 
 

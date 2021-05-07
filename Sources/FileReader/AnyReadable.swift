@@ -22,6 +22,8 @@
  
  */
 
+import Foundation
+
 public protocol AnyReadable {
     
     /// crate a new Instance and initialize with default values without moving the offset
@@ -41,6 +43,18 @@ public protocol AnyReadable {
     
 }
 
+extension AnyReadable {
+
+    static func read<C: Context>(from data: ContiguousBytes, with context: inout C) throws -> Self? {
+    
+        return try data.withUnsafeBytes { ptr in
+            try Self.read(ptr, with: &context, "\(type(of: self))")
+        }
+        
+    }
+    
+}
+
 //MARK:- Reader implementation
 extension AnyReadable {
     
@@ -57,7 +71,14 @@ extension AnyReadable {
      */
     public static func read<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String? = nil, upperBound: Int? = nil) throws -> Self? {
         
-        print("[\(String(describing: context.offset).padding(toLength: 8, withPad: " ", startingAt: 0))] READ \(symbol ?? "") : \(type(of: self))")
+        
+        #if PARSER_TRACE
+        let offset = String(context.offset).padding(toLength: 13, withPad: " ", startingAt: 0)
+        let symbol = "\(symbol ?? "???")".padding(toLength: 12, withPad: " ", startingAt: 0)
+        let type = "\(String(describing: Self.self))".padding(toLength: 12, withPad: " ", startingAt: 0)
+        
+        print("[\(offset)] READ \(symbol) : \(type)")
+        #endif
         
         // create new instance
         guard var new = try Self.new(bytes, with: &context, symbol) else {

@@ -24,7 +24,7 @@
 
 import Foundation
 
-public struct FixedCharBoundedFrame<F: UnsignedInteger & FixedWidthInteger & AnyReadable> : PersistentFrameReader {
+public struct FixedCharLabel<F: UnsignedInteger & FixedWidthInteger & AnyReadable> : PersistentProperty {
     public typealias Value = String
     
     public var bound : F = .zero
@@ -45,12 +45,12 @@ public struct FixedCharBoundedFrame<F: UnsignedInteger & FixedWidthInteger & Any
 extension Persistent where
     Meta : UnsignedInteger & FixedWidthInteger & AnyReadable,
     Value == String,
-    Parent == EmptyFrame,
-    Bound == FixedCharBoundedFrame<Meta>
+    Parent == EmptyReadable,
+    Property == FixedCharLabel<Meta>
 {
     
-    convenience public init(wrappedValue initialValue: Bound.Value, _ label: Meta.Type, _ encoding: String.Encoding = .utf8) {
+    convenience public init(wrappedValue initialValue: Property.Value, _ label: Meta.Type, _ encoding: String.Encoding = .utf8) {
         
-        self.init(wrappedValue: initialValue, FixedCharBoundedFrame<Meta>(encoding:  encoding))
+        self.init(wrappedValue: initialValue, FixedCharLabel<Meta>(encoding:  encoding))
     }
 }

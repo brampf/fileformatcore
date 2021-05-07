@@ -22,7 +22,7 @@
  
  */
 
-extension Array : AnyReadable where Element : AnyReadable {
+extension Array : AnyReadable,AutoReadable where Element : AnyReadable {
     
     public static func new<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String?) throws -> Self? {
         return .init()
@@ -34,7 +34,7 @@ extension Array : AnyReadable where Element : AnyReadable {
     }
     
     public mutating func read<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String?, upperBound: Int?) throws {
-        
+    
         let upperBound = upperBound ?? context.head?.endOffset ?? bytes.endIndex
         
         var new = [Element]()

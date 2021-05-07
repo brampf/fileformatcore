@@ -22,7 +22,7 @@
  
  */
 
-public struct StringFrame<Parent: AnyReadable, F: FixedWidthInteger & AnyReadable> : PersistentFrameReader {
+public struct BoundedString<Parent: AnyReadable, F: FixedWidthInteger & AnyReadable> : PersistentProperty {
     
     public typealias Value = String
     
@@ -32,10 +32,10 @@ public struct StringFrame<Parent: AnyReadable, F: FixedWidthInteger & AnyReadabl
         case cstring
     }
     
-    public var bound : KeyPath<Parent,Transient<Parent,F>>?
+    public var bound : KeyPath<Parent,ReadableWrapper>?
     public var type : StringType
     
-    public init(bound: KeyPath<Parent,Transient<Parent,F>>? = nil, type: StringType){
+    public init(bound: KeyPath<Parent,ReadableWrapper>? = nil, type: StringType){
         self.bound = bound
         self.type = type
     }
@@ -54,23 +54,23 @@ public struct StringFrame<Parent: AnyReadable, F: FixedWidthInteger & AnyReadabl
     
 }
 
-extension Persistent where Parent == EmptyFrame, Value == String, Meta == UInt8, Bound == StringFrame<Parent, Meta> {
+extension Persistent where Parent == EmptyReadable, Value == String, Meta == UInt8, Property == BoundedString<Parent, Meta> {
     
     
-    convenience public init(wrappedValue initialValue: Bound.Value, _ type: StringFrame<Parent,Meta>.StringType = .utf8) {
+    convenience public init(wrappedValue initialValue: Property.Value, _ type: BoundedString<Parent,Meta>.StringType = .utf8) {
         
-        self.init(wrappedValue : initialValue, StringFrame(type: type))
+        self.init(wrappedValue : initialValue, BoundedString(type: type))
     }
     
 }
 
 
-extension Persistent where Value == String, Bound == StringFrame<Parent, Meta> {
+extension Persistent where Value == String, Property == BoundedString<Parent, Meta> {
     
     
-    convenience public init(wrappedValue initialValue: Bound.Value, _ path: KeyPath<Parent, Transient<Parent,Meta>>? = nil, _ type: StringFrame<Parent,Meta>.StringType = .utf8) {
+    convenience public init(wrappedValue initialValue: Property.Value, _ path: KeyPath<Parent, ReadableWrapper>? = nil, _ type: BoundedString<Parent,Meta>.StringType = .utf8) {
         
-        self.init(wrappedValue : initialValue, StringFrame(bound: path, type: type))
+        self.init(wrappedValue : initialValue, BoundedString(bound: path, type: type))
     }
     
 }

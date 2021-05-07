@@ -48,7 +48,7 @@ extension String : AnyReadable {
     }
     
     public var byteSize: Int {
-        self.count * MemoryLayout<Self.Element>.size
+        self.count * MemoryLayout<CChar>.size
     }
     
     public var debugLayout: String {

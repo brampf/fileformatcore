@@ -23,46 +23,51 @@
  */
 
 /**
- A `PersistentFrameReader` to read arrays up to a specific length based on the value of a previously read property
-
-*/
-public struct CounterBoundedFrame<Parent: AnyReadable, R: AnyReadable, F: FixedWidthInteger & AnyReadable> : PersistentFrameReader {
-    public  typealias  Value = [R]
+ Reads child elements into an array until a child matches the comparion provided
+ */
+public struct ComparisonBoundedList<R: AnyReadable, Criterion: Equatable> : PersistentProperty {
+    public typealias Value = [R]
     
-    public var bound : KeyPath<Parent,F>
+    public var bound : KeyPath<R,Criterion>
+    public var criterion : Criterion
     
     public func read<C: Context>(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout C) throws -> Value? {
-        
-        guard let count = context.seek(for: bound) else {
-            
-            context.head?.transients.forEach{ t in
-                print("\(type(of: context.head?.readable)) : \(t.key) = \(t.value)")
-            }
-            
-            // no idea what to do, syntax is definitely not right
-            throw ReaderError.internalError(ErrorStack(symbol, Value.self, context.offset), "Counting index for \(type(of: Parent.self)) not found")
-        }
         
         context.head?.index = 0
         
         var new : [R] = .init()
         
-        for _ in 0 ..< count {
-            
+        var condition = false
+        repeat {
             if let next = try R.read(bytes, with: &context, symbol) {
                 new.append(next)
+                
+                condition = next[keyPath: bound] != criterion
             }
+            
             context.head?.index += 1
-        }
+            
+        } while context.offset < (context.head?.endOffset ?? bytes.endIndex) && condition
         
         context.head?.index = 0
+        
         return new
+        
     }
+    
 }
 
-extension Persistent where Parent : AnyReadable, Meta: FixedWidthInteger & AnyReadable, Bound == CounterBoundedFrame<Parent, Value, Meta> {
+
+extension Persistent where
+    Meta: Equatable,
+    Value == [Parent],
+    Parent : AnyReadable,
+    Property == ComparisonBoundedList<Parent, Meta>
+{
     
-    convenience public init(wrappedValue initialValue: Bound.Value, _ path: KeyPath<Parent, Meta>) {
-        self.init(wrappedValue: initialValue, CounterBoundedFrame(bound: path))
+    convenience public init(wrappedValue initialValue: Property.Value, _ path: KeyPath<Parent, Meta>, equals criterion: Meta) {
+        
+        self.init(wrappedValue: initialValue, ComparisonBoundedList(bound: path, criterion: criterion))
     }
+    
 }

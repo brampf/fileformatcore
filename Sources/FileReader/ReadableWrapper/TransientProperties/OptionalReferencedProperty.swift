@@ -1,6 +1,6 @@
 /*
  
- Copyright (c) <2021>
+ Copyright (c) <2020>
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -24,30 +24,33 @@
 
 import Foundation
 
-extension Data : AutoReadable {
+public struct OptionalReferencedProperty<Parent: AnyReadable, Meta: Equatable, Value: AnyReadable> : PropertyHandler {
     
-    public static func new<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String?) throws -> Self? {
-        return .init()
-    }
+    var reference : KeyPath<Parent,Meta>
+    var condition : Meta
     
-    public static func upperBound<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C) throws -> Int? {
-        return nil
-    }
-    
-    public mutating func read<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String?, upperBound: Int?) throws {
+    public func read<C>(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout C) throws -> Value? where C : Context {
         
-        let upperBound = upperBound ?? context.head?.endOffset ?? bytes.endIndex
-        
-        if let new = try bytes.read(&context.offset, upperBound: upperBound, byteSwapped: context.bigEndian, symbol) {
-            self = new
+        if context.seek(for: reference) == condition {
+            
+            // read the value
+            let value = try Value.read(bytes, with: &context, symbol)
+            // store in context to access later
+            context.head?.transients[reference] = value
+            
+            return value
         } else {
-            self = Data()
+            return nil
         }
+    }
+}
+
+
+extension Transient where Meta: Equatable, Handler == OptionalReferencedProperty<Parent, Meta, Value> {
+
+    
+    convenience public init(wrappedValue initialValue: Value, _ reference: KeyPath<Parent,Meta>, equals: Meta){
         
+        self.init(wrappedValue: initialValue, OptionalReferencedProperty(reference: reference, condition: equals))
     }
-    
-    public var byteSize: Int {
-        self.count
-    }
-    
 }

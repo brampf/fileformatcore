@@ -87,7 +87,7 @@ final class BaseFileTests: XCTestCase {
         
         XCTAssertEqual(new.version, 42)
         XCTAssertEqual(new.field?.number, 23)
-        XCTAssertEqual(new.field?.count, 0)
+        XCTAssertEqual(new.field?.count, 2)
         XCTAssertEqual(new.field?.tuples.count, 2)
         XCTAssertEqual(new.field?.tuples[0].index, 1)
         XCTAssertEqual(new.field?.tuples[0].payload, 52)
@@ -140,7 +140,7 @@ final class BaseFileTests: XCTestCase {
         let new = try! TestFile.read(from: Data(bytes))!
         
         XCTAssertEqual(new.number, 42)
-        XCTAssertEqual(new.count, 0)
+        XCTAssertEqual(new.count, 3)
         XCTAssertEqual(new.array.count, 3)
         XCTAssertEqual(new.list.count, 6)
         

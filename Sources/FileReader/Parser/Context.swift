@@ -25,7 +25,7 @@
 /**
  Parser context
  */
-public protocol Context {
+public protocol Context : CustomDebugStringConvertible {
     associatedtype Configuration: FileConfiguration
     
     /// global byte offset

@@ -1,3 +1,4 @@
+
 /*
  
  Copyright (c) <2021>
@@ -22,19 +23,13 @@
  
  */
 
-struct ByteSequence<R: AnyReadable> : PersistentFrameReader {
-    typealias Value = String
+/**
+ A reader to hook in with the `PersistentWrapper` to read the the  `ReadableElement` specified as `Value` based on custom configurations
+ */
+public protocol PersistentProperty {
+    associatedtype Value : AnyReadable
     
-    public var bound : [UInt8]
-    
-    func read<C: Context>(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout C) throws -> Value? {
-        
-        let upperBound = context.head?.endOffset ?? bytes.endIndex
-        
-        let range = bytes.firstRange(of: bound, in: context.offset..<upperBound)
-        let length = (range?.startIndex ?? bytes.endIndex) - context.offset
-        
-        return try bytes.read(&context.offset, len: length , encoding: .utf8, symbol)
-        
-    }
+    func read<C: Context>(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout C) throws -> Value?
 }
+
+

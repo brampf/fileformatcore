@@ -1,4 +1,3 @@
-
 /*
  
  Copyright (c) <2021>
@@ -23,11 +22,28 @@
  
  */
 
+import Foundation
+
 /**
- A reader to hook in with the `PersistentWrapper` to read the the  `ReadableElement` specified as `Value` based on custom configurations
+ A reader to hook in with the `ReadableWrapper` to read  `AnyReadable`  specified as `Value` based on custom configurations
  */
-public protocol PersistentFrameReader {
+public protocol PropertyHandler {
     associatedtype Value : AnyReadable
     
     func read<C: Context>(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout C) throws -> Value?
+}
+
+public protocol ReferencedPropertyHandler : PropertyHandler {
+    associatedtype Parent
+    associatedtype Reference : KeyPath<Parent,Value>
+    
+    var reference : Reference { get }
+}
+
+extension ReferencedPropertyHandler {
+    
+    public func referencedValue(_ instance: Parent) -> Value {
+        instance[keyPath: reference]
+    }
+    
 }

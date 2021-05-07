@@ -24,7 +24,7 @@
 
 import Foundation
 
-struct SequentialFrame<R: AnyReadable> : PersistentFrameReader {
+struct SequentialFrame<R: AnyReadable> : PersistentProperty {
     typealias Value = [R]
     
     public var bound : [UInt8]

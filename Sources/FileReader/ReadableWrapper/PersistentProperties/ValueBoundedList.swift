@@ -22,18 +22,14 @@
  
  */
 
-/**
- Reads child elements into an array until a child matches the comparion provided
- */
-public struct ComparisonBoundedFrame<R: AnyReadable, Criterion: Equatable> : PersistentFrameReader {
+import Foundation
+
+public struct ValueBoundedList<R: AnyReadable & Equatable> : PersistentProperty {
     public typealias Value = [R]
     
-    public var bound : KeyPath<R,Criterion>
-    public var criterion : Criterion
+    public var bound : R
     
     public func read<C: Context>(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout C) throws -> Value? {
-        
-        context.head?.index = 0
         
         var new : [R] = .init()
         
@@ -42,14 +38,10 @@ public struct ComparisonBoundedFrame<R: AnyReadable, Criterion: Equatable> : Per
             if let next = try R.read(bytes, with: &context, symbol) {
                 new.append(next)
                 
-                condition = next[keyPath: bound] != criterion
+                condition = next != bound
             }
             
-            context.head?.index += 1
-            
         } while context.offset < (context.head?.endOffset ?? bytes.endIndex) && condition
-        
-        context.head?.index = 0
         
         return new
         
@@ -57,17 +49,10 @@ public struct ComparisonBoundedFrame<R: AnyReadable, Criterion: Equatable> : Per
     
 }
 
-
-extension Persistent where
-    Meta: Equatable,
-    Value == [Parent],
-    Parent : AnyReadable,
-    Bound == ComparisonBoundedFrame<Parent, Meta>
-{
+extension Persistent where Parent == EmptyReadable, Meta: Equatable, Property == ValueBoundedList<Value>, Meta == Value {
     
-    convenience public init(wrappedValue initialValue: Bound.Value, _ path: KeyPath<Parent, Meta>, equals criterion: Meta) {
-        
-        self.init(wrappedValue: initialValue, ComparisonBoundedFrame(bound: path, criterion: criterion))
+    convenience public init(wrappedValue initialValue: Property.Value, equals criterion: Meta) {
+        self.init(wrappedValue: initialValue, ValueBoundedList(bound: criterion))
     }
     
 }

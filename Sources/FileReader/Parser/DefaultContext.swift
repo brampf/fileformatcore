@@ -49,7 +49,11 @@ open class DefaultContext<Configuration: FileConfiguration> : Context {
     
     public func push(_ node: AnyReadable, upperBound: Int?){
         
-        stack.append(.init(node, offset, upperBound))
+        if upperBound == nil, let frameEnd = head?.endOffset {
+            stack.append(.init(node, offset, frameEnd))
+        } else {
+            stack.append(.init(node, offset, upperBound))
+        }
     }
     
     public func pop() throws -> AnyReadable? {
@@ -172,4 +176,21 @@ extension DefaultContext where Configuration == DefaultConfiguration {
      convenience public init(out: ((Output) -> Void)? = nil){
         self.init(using: DefaultConfiguration(), out: out)
     }
+}
+
+extension DefaultContext {
+    
+    convenience public init(){
+        self.init(using: Self.Configuration.init())
+    }
+}
+
+extension DefaultContext : CustomDebugStringConvertible {
+    
+    public var debugDescription: String {
+        return stack.reduce(into: "OFFSET \(offset)\n") { out, context in
+            out.append(context.debugDescription+"\n")
+        }
+    }
+    
 }

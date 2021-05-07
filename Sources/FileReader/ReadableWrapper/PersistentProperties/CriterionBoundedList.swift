@@ -22,7 +22,7 @@
  
  */
 
-public struct CriterionBoundedFrame<Parent: BaseFile, R: AnyReadable, Criterion: Equatable> : PersistentFrameReader {
+public struct CriterionBoundedList<Parent: BaseFile, R: AnyReadable, Criterion: Equatable> : PersistentProperty {
     public typealias Value = [R]
     
     public var bound : KeyPath<Parent,Criterion>
@@ -51,9 +51,9 @@ public struct CriterionBoundedFrame<Parent: BaseFile, R: AnyReadable, Criterion:
     }
 }
 
-extension Persistent where Parent : AnyReadable, Meta: Equatable, Bound == CriterionBoundedFrame<Parent, Value, Meta> {
+extension Persistent where Parent : AnyReadable, Meta: Equatable, Property == CriterionBoundedList<Parent, Value, Meta> {
     
-    convenience public init(wrappedValue initialValue: Bound.Value, _ path: KeyPath<Parent, Meta>, equals criterion: Meta) {
-        self.init(wrappedValue: initialValue, CriterionBoundedFrame(bound: path, criterion: criterion))
+    convenience public init(wrappedValue initialValue: Property.Value, _ path: KeyPath<Parent, Meta>, equals criterion: Meta) {
+        self.init(wrappedValue: initialValue, CriterionBoundedList(bound: path, criterion: criterion))
     }
 }

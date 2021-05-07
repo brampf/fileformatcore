@@ -24,7 +24,7 @@
 
 import Foundation
 
-public struct EmptyFrame : AutoReadable {
+public struct EmptyReadable : AutoReadable {
     
     public init() {
         
@@ -35,26 +35,24 @@ public struct EmptyFrame : AutoReadable {
     }
 }
 
-@propertyWrapper public class Persistent<Parent: AnyReadable, Value, Meta, Bound : PersistentFrameReader> {
+@propertyWrapper public final class Persistent<Parent: AnyReadable, Value, Meta, Property : PersistentProperty> {
     
-    internal var uuid : UUID = UUID()
+    var property : Property
     
-    var bound : Bound
+    public var wrappedValue : Property.Value
     
-    public var wrappedValue : Bound.Value
-    
-    public init(wrappedValue: Bound.Value, _ bound: Bound){
-        self.bound = bound
+    public init(wrappedValue: Property.Value, _ bound: Property){
+        self.property = bound
         self.wrappedValue = wrappedValue
     }
     
 }
 
-extension Persistent : ReadableWrapper {
-    
+extension Persistent : ReadableWrapper  {
+
     public func read<C: Context>(_ bytes: UnsafeRawBufferPointer, context: inout C, _ symbol: String? = nil) throws {
         
-        if let new = try bound.read(symbol, from: bytes, in: &context) {
+        if let new = try property.read(symbol, from: bytes, in: &context) {
             wrappedValue = new
         }
     }
@@ -67,5 +65,5 @@ extension Persistent : ReadableWrapper {
         
         return wrappedValue.debugLayout(level+1)
     }
+    
 }
-

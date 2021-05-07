@@ -22,7 +22,7 @@
  
  */
 
-extension FixedWidthInteger where Self : AnyReadable {
+extension FixedWidthInteger where Self : AutoReadable {
     
     /// Always initiliazes as Zero
     public static func new<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String?) throws -> Self? {
@@ -51,34 +51,34 @@ extension FixedWidthInteger where Self : AnyReadable {
     }
 }
 
-extension Int64 : AnyReadable {
+extension Int64 : AutoReadable {
     
 }
 
-extension Int32 : AnyReadable {
+extension Int32 : AutoReadable {
     
 }
 
-extension Int16 : AnyReadable {
+extension Int16 : AutoReadable {
     
 }
 
-extension Int8 : AnyReadable {
+extension Int8 : AutoReadable {
     
 }
 
-extension UInt64 : AnyReadable {
+extension UInt64 : AutoReadable {
     
 }
 
-extension UInt32 : AnyReadable {
+extension UInt32 : AutoReadable {
     
 }
 
-extension UInt16 : AnyReadable {
+extension UInt16 : AutoReadable {
     
 }
 
-extension UInt8 : AnyReadable {
+extension UInt8 : AutoReadable {
     
 }

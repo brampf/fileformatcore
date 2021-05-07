@@ -24,23 +24,40 @@
 
 import Foundation
 
-public class AnyTransient<Parent: AnyReadable> {
-    
-    var instance : Parent!
-}
-
 /**
  A property who's value is read and thus can be used as counter or condition in other property wrappers but who's value is computed at runtime
  */
-@propertyWrapper public final class Transient<Parent: AnyReadable, Value: AnyReadable> : AnyTransient<Parent> {
+@propertyWrapper public final class Transient<Parent: AnyReadable, Meta, Value: AnyReadable, Handler : PropertyHandler> {
     
-    var bound : KeyPath<Parent,Value>
+    public var handler : Handler
     
-    public var wrappedValue: Value
+    public var wrappedValue: Handler.Value
     
-    public init(wrappedValue: Value, _ bound: KeyPath<Parent,Value>){
-        self.bound = bound
+    public init(wrappedValue: Handler.Value, _ handler: Handler){
+        self.handler = handler
         self.wrappedValue = wrappedValue
+    }
+}
+
+extension Transient where Handler.Value : AutoReadable {
+    
+    public convenience init(_ handler: Handler){
+        self.init(wrappedValue: Handler.Value(), handler)
+    }
+}
+
+extension Transient where Handler.Value == Optional<Value> {
+    
+    public convenience init(_ handler: Handler) {
+        self.init(wrappedValue: nil, handler)
+    }
+    
+}
+
+extension Transient where Handler : ReferencedPropertyHandler, Handler.Value == Value, Handler.Parent == Parent{
+    
+    public func referencedValue(_ instance: Parent) -> Handler.Value {
+        handler.referencedValue(instance)
     }
 }
 
@@ -48,9 +65,10 @@ extension Transient : ReadableWrapper {
 
     public func read<C: Context>(_ bytes: UnsafeRawBufferPointer, context: inout C, _ symbol: String? = nil) throws {
         
-        let value = try Value.read(bytes, with: &context)
-        // store in context to access later
-        context.head?.transients[bound] = value
+        // ignore the result for transient properties
+        if let new = try handler.read(symbol, from: bytes, in: &context) {
+            wrappedValue = new
+        }
     }
     
     public var byteSize: Int {

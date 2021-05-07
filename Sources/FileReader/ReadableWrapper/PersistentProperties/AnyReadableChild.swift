@@ -24,30 +24,32 @@
 
 import Foundation
 
-extension Data : AutoReadable {
+/// A property wrapper for just one single `Readable`
+public struct AnyReadableChild<R: AnyReadable> : PersistentProperty {
+    public typealias Value = R
     
-    public static func new<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String?) throws -> Self? {
-        return .init()
-    }
-    
-    public static func upperBound<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C) throws -> Int? {
-        return nil
-    }
-    
-    public mutating func read<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String?, upperBound: Int?) throws {
-        
-        let upperBound = upperBound ?? context.head?.endOffset ?? bytes.endIndex
-        
-        if let new = try bytes.read(&context.offset, upperBound: upperBound, byteSwapped: context.bigEndian, symbol) {
-            self = new
-        } else {
-            self = Data()
-        }
+    init() {
         
     }
     
-    public var byteSize: Int {
-        self.count
+    public func read<C: Context>(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout C) throws -> Value? {
+
+        try Value.read(bytes, with: &context, symbol)
     }
+}
+
+
+extension Persistent where Parent == EmptyReadable, Value: AnyReadable, Meta == Void, Property == AnyReadableChild<Value> {
     
+    convenience public init(wrappedValue initialValue: Value) {
+        self.init(wrappedValue: initialValue, AnyReadableChild())
+    }
+}
+
+
+extension Persistent where Parent == EmptyReadable, Value: AutoReadable, Meta == Void, Property == AnyReadableChild<Value> {
+    
+    convenience public init(wrappedValue initialValue: Value = Value.init()) {
+        self.init(wrappedValue: initialValue, AnyReadableChild())
+    }
 }

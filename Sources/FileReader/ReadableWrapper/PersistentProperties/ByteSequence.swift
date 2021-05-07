@@ -22,31 +22,19 @@
  
  */
 
-import Foundation
-
-/// A property wrapper for just one single `Readable`
-public struct SingleElementFrame<R: AnyReadable> : PersistentFrameReader {
-    public typealias Value = R
+struct ByteSequence<R: AnyReadable> : PersistentProperty {
+    typealias Value = String
     
-    public var bound: Void
+    public var bound : [UInt8]
     
-    init() {
+    func read<C: Context>(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout C) throws -> Value? {
+        
+        let upperBound = context.head?.endOffset ?? bytes.endIndex
+        
+        let range = bytes.firstRange(of: bound, in: context.offset..<upperBound)
+        let length = (range?.startIndex ?? bytes.endIndex) - context.offset
+        
+        return try bytes.read(&context.offset, len: length , encoding: .utf8, symbol)
         
     }
-    
-    public func read<C: Context>(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout C) throws -> Value? {
-
-        try Value.read(bytes, with: &context, symbol)
-    }
 }
-
-
-extension Persistent where Parent == EmptyFrame, Value: AnyReadable, Meta == Void, Bound == SingleElementFrame<Value> {
-    
-    convenience public init(wrappedValue initialValue: Value) {
-        self.init(wrappedValue: initialValue, SingleElementFrame())
-    }
-}
-
-
-

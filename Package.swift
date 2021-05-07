@@ -25,7 +25,7 @@ let package = Package(
             ,exclude: ["Obsolete"]
             ,swiftSettings: [
                 .define("PARSER_TRACE", .when(configuration: .debug)),
-                .define("READER_STACK_TRACE", .when(configuration: .debug))
+                //.define("PARSER_RAW_TRACE", .when(configuration: .debug))
             ]
             
         ),

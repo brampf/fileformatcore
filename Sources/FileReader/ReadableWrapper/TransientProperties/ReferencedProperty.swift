@@ -22,37 +22,35 @@
  
  */
 
-import Foundation
 
-public struct ValueBoundedFrame<R: AnyReadable & Equatable> : PersistentFrameReader {
-    public typealias Value = [R]
+public struct ReferencedProperty<Parent: AnyReadable, Value : AnyReadable> : PropertyHandler {
     
-    public var bound : R
+    var reference : KeyPath<Parent,Value>
     
-    public func read<C: Context>(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout C) throws -> Value? {
+    public func read<C>(_ symbol: String?, from bytes: UnsafeRawBufferPointer, in context: inout C) throws -> Value? where C : Context {
+     
+        // read the value
+        let value = try Value.read(bytes, with: &context, symbol)
+        // store in context to access later
+        context.head?.transients[reference] = value
         
-        var new : [R] = .init()
-        
-        var condition = false
-        repeat {
-            if let next = try R.read(bytes, with: &context, symbol) {
-                new.append(next)
-                
-                condition = next != bound
-            }
-            
-        } while context.offset < (context.head?.endOffset ?? bytes.endIndex) && condition
-        
-        return new
-        
+        return value
     }
-    
 }
 
-extension Persistent where Parent == EmptyFrame, Meta: Equatable, Bound == ValueBoundedFrame<Value>, Meta == Value {
+
+extension Transient where Handler == ReferencedProperty<Parent, Value>, Meta == Void {
     
-    convenience public init(wrappedValue initialValue: Bound.Value, equals criterion: Meta) {
-        self.init(wrappedValue: initialValue, ValueBoundedFrame(bound: criterion))
+    convenience public init(wrappedValue initialValue: Handler.Value, _ reference: KeyPath<Parent,Value>){
+        
+        self.init(wrappedValue: initialValue, ReferencedProperty(reference: reference))
     }
+}
+
+extension Transient where Handler == ReferencedProperty<Parent, Value>, Meta == Void, Value: AutoReadable {
     
+    convenience public init(_ reference: KeyPath<Parent,Value>){
+        
+        self.init(ReferencedProperty(reference: reference))
+    }
 }

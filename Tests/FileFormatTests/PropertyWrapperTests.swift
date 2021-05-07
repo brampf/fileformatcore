@@ -205,10 +205,10 @@ final class PropertyWrapperTests: XCTestCase {
         
         XCTAssertNotNil(frame)
         XCTAssertEqual(frame?.suparraycount, 2)
-        XCTAssertEqual(frame?.arrayCount, 0)
+        XCTAssertEqual(frame?.arrayCount, 4)
         
         XCTAssertNotNil(frame?.child)
-        XCTAssertEqual(frame?.child?.count, 0)
+        XCTAssertEqual(frame?.child?.count, 3)
         XCTAssertEqual(frame?.child?.subarray, [0,1,2])
         
         XCTAssertEqual(frame?.child?.suparray, [23,42])
@@ -223,7 +223,7 @@ final class PropertyWrapperTests: XCTestCase {
         
         struct TestFrame : AutoReadable {
             
-            @Transient<TestFrame,UInt8>(\TestFrame.array.count8) var counter : UInt8 = 0
+            @Transient(\TestFrame.array.count8) var counter : UInt8 = 0
             
             @Persistent var array : [UInt8] = []
         }
@@ -240,6 +240,44 @@ final class PropertyWrapperTests: XCTestCase {
         
         /// - ToDO: Fix this
         // XCTAssertEqual(frame?.counter, 10)
+    }
+    
+    func testOptionalProperty() throws {
+        
+        
+        struct TestFrame : AutoReadable {
+            
+            @Transient(\TestFrame.condition) var condition : UInt8
+            
+            @Transient(\TestFrame.condition, equals: 1) var test : UInt64?
+        
+        }
+        
+        let test = TestFrame()
+        test.test = 42
+        
+        XCTAssertEqual(test.test, 42)
+        
+        let truebytes : [UInt8] = [1,0,0,0,0,0,0,0,23]
+        
+        var context = DefaultContext()
+        let trueframe = try truebytes.withUnsafeBytes{ ptr in
+            try TestFrame.read(ptr, with: &context)
+        }
+        
+        XCTAssertEqual(trueframe?.condition, 1)
+        XCTAssertEqual(trueframe?.test, 23)
+        
+        let falsebytes : [UInt8] = [0,0,0,0,0,0,0,0,23]
+        
+        context = DefaultContext()
+        let falseframe = try falsebytes.withUnsafeBytes{ ptr in
+            try TestFrame.read(ptr, with: &context)
+        }
+        
+        XCTAssertEqual(falseframe?.condition, 0)
+        XCTAssertEqual(falseframe?.test, nil)
+        
     }
     
 }
