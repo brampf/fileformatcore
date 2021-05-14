@@ -75,9 +75,9 @@ extension AnyReadable {
         #if PARSER_TRACE
         let offset = String(context.offset).padding(toLength: 13, withPad: " ", startingAt: 0)
         let symbol = "\(symbol ?? "???")".padding(toLength: 12, withPad: " ", startingAt: 0)
-        let type = "\(String(describing: Self.self))".padding(toLength: 12, withPad: " ", startingAt: 0)
+        let typ = "\(String(describing: Self.self))".padding(toLength: 12, withPad: " ", startingAt: 0)
         
-        print("[\(offset)] READ \(symbol) : \(type)")
+        print("[\(offset)] READ \(symbol) : \(typ)")
         #endif
         
         // create new instance

@@ -47,7 +47,7 @@ open class DefaultContext<Configuration: FileConfiguration> : Context {
         
     }
     
-    public func push(_ node: AnyReadable, upperBound: Int?){
+    public final func push(_ node: AnyReadable, upperBound: Int?){
         
         if upperBound == nil, let frameEnd = head?.endOffset {
             stack.append(.init(node, offset, frameEnd))
@@ -56,7 +56,7 @@ open class DefaultContext<Configuration: FileConfiguration> : Context {
         }
     }
     
-    public func pop() throws -> AnyReadable? {
+    public final func pop() throws -> AnyReadable? {
         
         if let element = stack.popLast(){
             

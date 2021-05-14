@@ -131,7 +131,7 @@ final class ReaderTests: XCTestCase {
                 } else {
                     return TestClassB()
                 }
-                
+        
             }
             
             @Persistent var number : UInt8 = 0
