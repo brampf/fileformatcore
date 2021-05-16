@@ -22,6 +22,13 @@
  
  */
 
-public protocol Frame {
 
+/**
+ Marker protocol for readable types
+ */
+
+public protocol Readable : Frame {
+    
+    init(_ reader: FileReader) throws
+    
 }

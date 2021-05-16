@@ -55,14 +55,19 @@ public class FileReader {
         self.config = DefaultConfiguraiton()
     }
     
+}
+
+//MARK:- Frames
+extension FileReader {
+    
     /// Reads the `FrameLiteral` and moves the offset
     public func read<R>(_ operation: ReadOperation<R>) rethrows -> R {
         return try operation(self)
     }
     
-    public func read<F: Frame>() throws -> F {
+    public func read<R: Readable>() throws -> R {
         
-        return try F.init(self)
+        return try R(self)
     }
     
     public func advance(bytes: Int) {
@@ -103,12 +108,12 @@ extension FileReader {
 // Mark:- Arrays
 extension FileReader {
     
-    public func read<F: Frame>(upperBound: Int) throws -> [F] {
+    public func read<R: Readable>(upperBound: Int) throws -> [R] {
         
-        var result : [F] = []
+        var result : [R] = []
         
         while offset < upperBound {
-            let new : F = try self.read()
+            let new : R = try self.read()
             result.append(new)
         }
         return result
@@ -125,12 +130,12 @@ extension FileReader {
         return result
     }
     
-    public func read<F: Frame>(length: Int) throws -> [F] {
+    public func read<R: Readable>(length: Int) throws -> [R] {
         
-        var result : [F] = []
+        var result : [R] = []
         
         while result.count < length {
-            let new : F = try self.read()
+            let new : R = try self.read()
             result.append(new)
         }
         return result

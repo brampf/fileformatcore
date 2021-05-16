@@ -22,25 +22,24 @@
  
  */
 
-extension Int : Frame {}
-extension Int8 : Frame {}
-extension Int16 : Frame {}
-extension Int32 : Frame {}
-extension Int64 : Frame {}
+extension Int : Readable {}
+extension Int8 : Readable {}
+extension Int16 : Readable {}
+extension Int32 : Readable {}
+extension Int64 : Readable {}
 
-extension UInt : Frame {}
-extension UInt8 : Frame {}
-extension UInt16 : Frame {}
-extension UInt32 : Frame {}
-extension UInt64  : Frame {}
+extension UInt : Readable {}
+extension UInt8 : Readable {}
+extension UInt16 : Readable {}
+extension UInt32 : Readable {}
+extension UInt64 : Readable {}
 
 extension FixedWidthInteger {
     
     public init(_ reader: FileReader) throws {
-        
         self = try reader.seek()
         
-        reader.advance(bytes: MemoryLayout<Self>.size)
+        reader.offset += MemoryLayout<Self>.size
     }
     
 }

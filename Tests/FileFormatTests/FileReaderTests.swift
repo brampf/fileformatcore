@@ -132,7 +132,7 @@ struct TestFrame : BaseFrame {
     }
 }
 
-class DemoFrame : OpenFrame {
+class DemoFrame : OpenFrame, Readable {
     
     typealias Bound = DemoFrame
     
@@ -184,7 +184,7 @@ class DemoFrameB : DemoFrame {
 }
 
 
-struct OuterFrame : Frame {
+struct OuterFrame : Readable {
     
     var number : UInt8
     
@@ -192,8 +192,7 @@ struct OuterFrame : Frame {
     
     var text : String
     
-    init(_ reader: FileReader) throws {
-        
+    public init(_ reader: FileReader) throws {
         self.number = try reader.read()
         self.inner = try reader.read()
         self.text = try reader.read()
@@ -201,7 +200,7 @@ struct OuterFrame : Frame {
     
 }
 
-struct InnerFrame : Frame {
+struct InnerFrame : Readable {
     
     var number : UInt32
     
