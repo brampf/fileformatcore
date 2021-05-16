@@ -109,6 +109,35 @@ final class ReaderTests: XCTestCase {
         
     }
     
+    func testInheritedProperties() throws {
+        
+        
+        class TopReadable : AutoReadable {
+            
+            @Persistent var number : UInt32 = 0
+            
+            required init() {
+                // nothing
+            }
+        }
+        
+        class SubReadable : TopReadable {
+            
+            @Persistent var text : String = ""
+        }
+        
+        let bytes : [UInt8] = [116,101,115,116,116,101,115,116]
+        
+        
+        var context = DefaultContext()
+        let frame = try bytes.withUnsafeBytes{ ptr in
+            try SubReadable.read(ptr, with: &context, nil)
+        }
+        
+        XCTAssertEqual(frame?.text, "test")
+        XCTAssertEqual(frame?.number, 1952805748)
+    }
+    
     func testAbstractReadable() throws {
 
         struct TestReadable : AutoReadable {

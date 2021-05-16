@@ -249,7 +249,7 @@ final class PropertyWrapperTests: XCTestCase {
             
             @Transient(\TestFrame.condition) var condition : UInt8
             
-            @Transient(\TestFrame.condition, equals: 1) var test : UInt64?
+            @Transient(\TestFrame.condition, equals: 1) var test : UInt64? = nil
         
         }
         

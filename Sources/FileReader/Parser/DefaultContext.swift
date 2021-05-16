@@ -75,7 +75,7 @@ open class DefaultContext<Configuration: FileConfiguration> : Context {
                         notify?(Warning("Offset \(offset) too small", element.startOffset, element.endOffset, node: type(of: element.readable)))
                         print("WARN: Offset \(offset) < \(end) on \(type(of: element.readable))")
                         // move offset to expected end of box
-                        offset = end
+                        //offset = end
                     }
                 }
                 
