@@ -27,7 +27,7 @@
  */
 import Foundation
 
-public protocol Frame : Node {
-    
+public protocol Frame {
 
+    init(_ reader: FileReader) throws
 }

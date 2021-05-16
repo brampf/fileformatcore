@@ -22,12 +22,25 @@
  
  */
 
-import Foundation
+extension Int : Frame {}
+extension Int8 : Frame {}
+extension Int16 : Frame {}
+extension Int32 : Frame {}
+extension Int64 : Frame {}
 
+extension UInt : Frame {}
+extension UInt8 : Frame {}
+extension UInt16 : Frame {}
+extension UInt32 : Frame {}
+extension UInt64  : Frame {}
 
-/**
- A memory frame width fixed width
- */
-public protocol Literal : Node {
+extension FixedWidthInteger {
+    
+    public init(_ reader: FileReader) throws {
+        
+        self = try reader.seek()
+        
+        reader.advance(bytes: MemoryLayout<Self>.size)
+    }
     
 }

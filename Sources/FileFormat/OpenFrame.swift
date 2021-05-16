@@ -24,19 +24,12 @@
 
 import Foundation
 
-public protocol OperationWrapper {}
+public protocol OpenFrame : Frame, Bounded {
+    
+    static func new(_ reader: FileReader) throws -> Bound.Type
+}
 
-@propertyWrapper
-public struct OP<Parent : Frame, Child: Node>  {
-    
-    public var wrappedValue : WritableKeyPath<Parent, Child>
-    
-    public var read : ReadOperation<Child>?
-    
-    public var write : WriteOperation<Child>?
-    
-    public init(wrappedValue: WritableKeyPath<Parent, Child>){
-        self.wrappedValue = wrappedValue
-    }
-    
+
+public protocol Bounded {
+    associatedtype Bound : Any
 }

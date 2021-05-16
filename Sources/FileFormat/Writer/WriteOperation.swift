@@ -24,4 +24,4 @@
 
 import Foundation
 
-public typealias WriteOperation<Input: Node> = (_ bytes: UnsafeRawBufferPointer, _ node: Input) -> Void
+public typealias WriteOperation<Input: Frame> = (_ bytes: UnsafeRawBufferPointer, _ node: Input) -> Void

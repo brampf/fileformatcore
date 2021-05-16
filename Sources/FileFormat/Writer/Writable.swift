@@ -24,8 +24,8 @@
 
 import Foundation
 
-public protocol Writable : NodeDescriptor {
+public protocol Writable : Frame {
     
-    static func write(_ bytes: UnsafeRawBufferPointer, _ node: Target) -> Void
+    static func write(_ bytes: UnsafeRawBufferPointer, _ node: Frame) -> Void
     
 }

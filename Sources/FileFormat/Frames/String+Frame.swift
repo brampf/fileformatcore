@@ -22,10 +22,6 @@
  
  */
 
+
 import Foundation
 
-public class ReaderContext {
-    
-    public var offset : Int = 0
-    
-}

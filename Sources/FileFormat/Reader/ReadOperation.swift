@@ -24,4 +24,4 @@
 
 import Foundation
 
-public typealias ReadOperation<Result: Node> = (_ bytes: UnsafeRawBufferPointer, _ context: ReaderContext) -> Result
+public typealias ReadOperation<Result> = (FileReader) throws -> Result

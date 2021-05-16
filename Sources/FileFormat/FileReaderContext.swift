@@ -22,11 +22,10 @@
  
  */
 
-import Foundation
-
-/**
- Marker protocol for any sort of read/write operation
- */
-public protocol Operation {
+public struct FileReaderContext {
     
+    public var startOffset : Int
+    public var endOffset : Int
+    
+    public var frame : Frame
 }

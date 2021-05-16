@@ -24,12 +24,12 @@
 
 import Foundation
 
-public protocol BaseFile : Node {
-    
+public protocol BaseFrame : Frame {
     
 }
 
-extension BaseFile {
+
+extension BaseFrame {
     
     /**
      Reads a `BaseFile` from the bytes provided
@@ -40,12 +40,11 @@ extension BaseFile {
      -  out: the output handler to use
      
      */
-    public static func read(from data: ContiguousBytes, with configuration: Context.Configuration = Context.Configuration(), out: ((Output) -> ())? = nil) throws -> Self? {
-        
-        var context = Context.init(using: configuration, out: out)
+    public static func read(from data: ContiguousBytes, with configuration: FileConfiguration, out: ((Output) -> ())? = nil) throws -> Self? {
         
         return try data.withUnsafeBytes { ptr in
-            try Self.read(ptr, with: &context, "\(type(of: self))")
+            let reader = FileReader(data: ptr, configuration: configuration)
+            return try reader.read()
         }
         
     }
@@ -59,13 +58,13 @@ extension BaseFile {
      -  out: the output handler to use
      
      */
-    public static func read(from url: URL, with configuration: Context.Configuration = Context.Configuration(), out: ((Output) -> ())? = nil) throws -> Self? {
+    public static func read(from url: URL, with configuration: FileConfiguration, out: ((Output) -> ())? = nil) throws -> Self? {
         
         let data = try Data(contentsOf: url)
-        var context = Context.init(using: configuration, out: out)
         
         return try data.withUnsafeBytes { ptr in
-            try Self.read(ptr, with: &context, "\(type(of: self))")
+            let reader = FileReader(data: ptr, configuration: configuration)
+            return try reader.read()
         }
         
     }

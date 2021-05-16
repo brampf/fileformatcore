@@ -25,10 +25,25 @@
 import Foundation
 
 /**
- A memory frame which width is determied at runtime
+ Parser context
  */
-public protocol Node {
+public protocol Context : CustomDebugStringConvertible {
+    associatedtype Configuration : FileConfiguration
+    
+    /// global byte offset
+    var offset : Int { get set }
+    
+    /// Handler for providing parser output
+    var notify: ((Output) -> Void)? {get}
+    
+    /// the local configuration
+    var config : Configuration { get }
+    
+    /// default initializer
+    init(using configuration: Configuration, out: ((Output) -> Void)?)
 
-    /// The number of bytes needed to store this node with its contents
-    var bytes : Int {get}
+}
+
+public class DefaultContext {
+    
 }

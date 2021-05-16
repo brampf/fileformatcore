@@ -39,7 +39,7 @@ let package = Package(
         ),
         .testTarget(
             name: "FileFormatTests",
-            dependencies: ["FileReader"]
+            dependencies: ["FileFormat","FileReader"]
             ,swiftSettings: [.define("PARSER_TRACE", .when(configuration: .debug))]
             )
     ]

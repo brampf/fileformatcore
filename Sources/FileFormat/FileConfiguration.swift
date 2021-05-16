@@ -24,8 +24,24 @@
 
 import Foundation
 
-public protocol NodeDescriptor {
-    associatedtype Target : Frame
+public protocol FileConfiguration {
     
-    static func new(_ bytes: UnsafeRawBufferPointer, _ context: ReaderContext) -> Target
+    // creates a standard configuration
+    init()
+    
+    var bigEndian : Bool { get set }
+    
+    var ignoreRecoverableErrors : Bool { get }
+}
+
+public struct DefaultConfiguraiton : FileConfiguration {
+    
+    public init(){
+        // nothing
+    }
+    
+    public var bigEndian: Bool = false
+    
+    public var ignoreRecoverableErrors: Bool = true
+    
 }
