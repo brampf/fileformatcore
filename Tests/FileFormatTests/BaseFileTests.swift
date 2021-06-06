@@ -1,5 +1,5 @@
 import XCTest
-import FileReader
+import FileFormat
 
 final class BaseFileTests: XCTestCase {
 
@@ -28,7 +28,7 @@ final class BaseFileTests: XCTestCase {
         
         struct TestFile : BaseFile {
             
-            typealias Context = DefaultContext<TestConfig>
+            typealias Context = FileReader
             
             @Persistent var version : UInt32 = 0
             
@@ -40,6 +40,7 @@ final class BaseFileTests: XCTestCase {
         }
         
         struct Field : AutoReadable {
+            
             static func size<C: Context>(_ data: UnsafeRawBufferPointer, with context: inout C) -> Int? {
                 nil
             }
@@ -106,7 +107,7 @@ final class BaseFileTests: XCTestCase {
     func testComplexFile() {
         
         struct TestFile : BaseFile {
-            typealias Context = DefaultContext<TestConfig>
+            typealias Context = FileReader
             
             @Persistent var number : UInt16 = 0
             
@@ -153,7 +154,7 @@ final class BaseFileTests: XCTestCase {
     func testFileWithPrimtiiveProperties() {
         
         struct TestFile : BaseFile {
-            typealias Context = DefaultContext<TestConfig>
+            typealias Context = FileReader
             
             @Persistent(equals: 8) var array : [UInt8] = []
             
@@ -175,7 +176,7 @@ final class BaseFileTests: XCTestCase {
     func testFileWithConditionalProperties() {
         
         struct TestFile : BaseFile {
-            typealias Context = DefaultContext<TestConfig>
+            typealias Context = FileReader
             
             @Persistent(\TestField.number, equals: 8) var array : [TestField] = []
             
@@ -203,7 +204,7 @@ final class BaseFileTests: XCTestCase {
     func testFileWithCountingProperties() {
         
         struct TestFile : BaseFile {
-            typealias Context = DefaultContext<TestConfig>
+            typealias Context = FileReader
             
             @Persistent(\TestField.number, equals: 8) var array : [TestField] = []
             
@@ -231,7 +232,7 @@ final class BaseFileTests: XCTestCase {
     func testFileWithStringProperties() {
         
         struct TestFile : BaseFile {
-            typealias Context = DefaultContext<TestConfig>
+            typealias Context = FileReader
             
             @Persistent(.cstring) var first = "Test"
             
@@ -264,11 +265,11 @@ final class BaseFileTests: XCTestCase {
                 return nil
             }
             
-            mutating func read<C: Context>(_ bytes: UnsafeRawBufferPointer, with context: inout C, _ symbol: String?, upperBound: Int?) throws {
+            mutating func read(_ bytes: UnsafeRawBufferPointer, with reader: FileReader, _ symbol: String?) throws {
             
-                self.number = try bytes.read(&context.offset, byteSwapped: context.bigEndian)
+                self.number = try bytes.read(&reader.offset, byteSwapped: reader.bigEndian)
                 
-                self.array = try bytes.read(&context.offset, upperBound: context.head?.endOffset ?? bytes.endIndex, byteSwapped: context.bigEndian)
+                self.array = try bytes.read(&reader.offset, upperBound: reader.head?.endOffset ?? bytes.endIndex, byteSwapped: reader.bigEndian)
             }
             
             var number : UInt32 = 0
@@ -292,10 +293,9 @@ final class BaseFileTests: XCTestCase {
         
         let bytes : [UInt8] = [0,0,0,32,1,2,3,4,5,6,7,8,9]
         
-        var context = DefaultContext(using: TestConfig(), out: nil
-        )
-        let frame = try bytes.withUnsafeBytes{ ptr in
-            try TestElement.read(ptr, with: &context, nil)
+        let reader = FileReader(using: TestConfig(), out: nil)
+        let frame : TestElement? = try bytes.withUnsafeBytes{ ptr in
+            try reader.parse(ptr)
         }
         
         XCTAssertEqual(frame?.number, 32)

@@ -1,5 +1,4 @@
 import XCTest
-import DataTypes
 
 final class UInt0Tests: XCTestCase {
 

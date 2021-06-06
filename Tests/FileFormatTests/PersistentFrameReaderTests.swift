@@ -1,5 +1,5 @@
 import XCTest
-@testable import FileReader
+@testable import FileFormat
 
 /// Test of the various `
 final class PersistentFrameReaderTests: XCTestCase {
@@ -25,12 +25,12 @@ final class PersistentFrameReaderTests: XCTestCase {
         
         let frame = SequentialFrame<String>(bound: [0x0D, 0x0A], divider: 0x2C, escape: 0x22)
         
-        var context = DefaultContext(using: TestConfig()) { msg in
+        let context = FileReader(using: TestConfig()) { msg in
             print(msg)
         }
         
         let new = try bytes.data(using: .utf8)?.withUnsafeBytes{ ptr in
-            try frame.read("Seq", from: ptr, in: &context)
+            try frame.read("Seq", from: ptr, with: context)
         }
         
         new?.forEach{ e in
@@ -44,7 +44,7 @@ final class PersistentFrameReaderTests: XCTestCase {
         struct Parent : BaseFile {
             
             typealias Configuration = TestConfig
-            typealias Context = DefaultContext<Configuration>
+            typealias Context = FileReader
             
             @Persistent(\Child.data, equals: 1701733408) var children : [Child] = []
             
@@ -88,7 +88,7 @@ final class PersistentFrameReaderTests: XCTestCase {
     func testFixedCharBoundedFrame() throws {
         
         struct Frame : BaseFile {
-            typealias Context = DefaultContext<TestConfig>
+            typealias Context = FileReader
             
             @Persistent(UInt32.self) var label = ""
             

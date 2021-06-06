@@ -1,5 +1,5 @@
 import XCTest
-import FileReader
+import FileFormat
 
 final class PropertyWrapperTests: XCTestCase {
     
@@ -24,9 +24,9 @@ final class PropertyWrapperTests: XCTestCase {
         
         let bytes : [UInt8] = [42]
         
-        var context = DefaultContext()
-        let frame = try bytes.withUnsafeBytes{ ptr in
-            try TestFrame.read(ptr, with: &context)
+        let reader = FileReader(using: DefaultConfiguration())
+        let frame : TestFrame? = try bytes.withUnsafeBytes{ ptr in
+            try reader.parse(ptr)
         }
        
         XCTAssertNotNil(frame)
@@ -49,9 +49,9 @@ final class PropertyWrapperTests: XCTestCase {
         
         let bytes : [UInt8] = [42]
         
-        var context = DefaultContext()
-        let frame = try bytes.withUnsafeBytes{ ptr in
-            try TestFrame.read(ptr, with: &context)
+        let reader = FileReader(using: DefaultConfiguration())
+        let frame : TestFrame? = try bytes.withUnsafeBytes{ ptr in
+            try reader.parse(ptr)
         }
         
         XCTAssertNotNil(frame)
@@ -75,9 +75,9 @@ final class PropertyWrapperTests: XCTestCase {
         
         let bytes : [UInt8] = [42,23]
         
-        var context = DefaultContext()
-        let frame = try bytes.withUnsafeBytes{ ptr in
-            try TestFrame.read(ptr, with: &context)
+        let reader = FileReader(using: DefaultConfiguration())
+        let frame : TestFrame? = try bytes.withUnsafeBytes{ ptr in
+            try reader.parse(ptr)
         }
         
         XCTAssertNotNil(frame)
@@ -105,9 +105,9 @@ final class PropertyWrapperTests: XCTestCase {
         
         let bytes : [UInt8] = [2,42,23,0,0,0,0,0,0]
         
-        var context = DefaultContext()
-        let frame = try bytes.withUnsafeBytes{ ptr in
-            try TestFrame.read(ptr, with: &context)
+        let reader = FileReader(using: DefaultConfiguration())
+        let frame : TestFrame? = try bytes.withUnsafeBytes{ ptr in
+            try reader.parse(ptr)
         }
         
         XCTAssertNotNil(frame)
@@ -128,9 +128,9 @@ final class PropertyWrapperTests: XCTestCase {
         
         let bytes : [UInt8] = [0,116,101,115,116]
         
-        var context = DefaultContext()
-        let frame = try bytes.withUnsafeBytes{ ptr in
-            try TestFrame.read(ptr, with: &context)
+        let reader = FileReader(using: DefaultConfiguration())
+        let frame : TestFrame? = try bytes.withUnsafeBytes{ ptr in
+            try reader.parse(ptr)
         }
         
         XCTAssertNotNil(frame)
@@ -148,9 +148,9 @@ final class PropertyWrapperTests: XCTestCase {
         
         let bytes : [UInt8] = [116,101,115,116]
         
-        var context = DefaultContext()
-        let frame = try bytes.withUnsafeBytes{ ptr in
-            try TestFrame.read(ptr, with: &context)
+        let reader = FileReader(using: DefaultConfiguration())
+        let frame : TestFrame? = try bytes.withUnsafeBytes{ ptr in
+            try reader.parse(ptr)
         }
         
         XCTAssertNotNil(frame)
@@ -198,9 +198,9 @@ final class PropertyWrapperTests: XCTestCase {
             
          ]
         
-        var context = DefaultContext()
-        let frame = try bytes.withUnsafeBytes{ ptr in
-            try TestFrame.read(ptr, with: &context)
+        let reader = FileReader(using: DefaultConfiguration())
+        let frame : TestFrame? = try bytes.withUnsafeBytes{ ptr in
+            try reader.parse(ptr)
         }
         
         XCTAssertNotNil(frame)
@@ -230,9 +230,9 @@ final class PropertyWrapperTests: XCTestCase {
         
         let bytes : [UInt8] = [10,0,1,2,3,4,5,6,7,8,9]
 
-        var context = DefaultContext()
-        let frame = try bytes.withUnsafeBytes{ ptr in
-            try TestFrame.read(ptr, with: &context)
+        let reader = FileReader(using: DefaultConfiguration())
+        let frame : TestFrame? = try bytes.withUnsafeBytes{ ptr in
+            try reader.parse(ptr)
         }
         
         XCTAssertEqual(frame?.array, [0,1,2,3,4,5,6,7,8,9])
@@ -247,7 +247,7 @@ final class PropertyWrapperTests: XCTestCase {
         
         struct TestFrame : AutoReadable {
             
-            @Transient(\TestFrame.condition) var condition : UInt8
+            @Transient(\TestFrame.condition) var condition : UInt8 = 0
             
             @Transient(\TestFrame.condition, equals: 1) var test : UInt64? = nil
         
@@ -260,9 +260,9 @@ final class PropertyWrapperTests: XCTestCase {
         
         let truebytes : [UInt8] = [1,0,0,0,0,0,0,0,23]
         
-        var context = DefaultContext()
-        let trueframe = try truebytes.withUnsafeBytes{ ptr in
-            try TestFrame.read(ptr, with: &context)
+        let truereader = FileReader(using: DefaultConfiguration())
+        let trueframe : TestFrame? = try truebytes.withUnsafeBytes{ ptr in
+            try truereader.parse(ptr)
         }
         
         XCTAssertEqual(trueframe?.condition, 1)
@@ -270,9 +270,9 @@ final class PropertyWrapperTests: XCTestCase {
         
         let falsebytes : [UInt8] = [0,0,0,0,0,0,0,0,23]
         
-        context = DefaultContext()
-        let falseframe = try falsebytes.withUnsafeBytes{ ptr in
-            try TestFrame.read(ptr, with: &context)
+        let falsereader = FileReader(using: DefaultConfiguration())
+        let falseframe : TestFrame? = try falsebytes.withUnsafeBytes{ ptr in
+            try falsereader.parse(ptr)
         }
         
         XCTAssertEqual(falseframe?.condition, 0)
